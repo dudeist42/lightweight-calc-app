@@ -23,6 +23,7 @@ class SafeStorage<Keys extends string> implements IStorage<Keys> {
   private storage: Storage;
   private listeners = new Set<() => void>();
   private snapshot: Partial<Record<Keys, string | null>> = {};
+  private dirty = true;
 
   public get length() {
     return this.storage.length;
@@ -43,12 +44,12 @@ class SafeStorage<Keys extends string> implements IStorage<Keys> {
 
   public set(key: Keys, value: string) {
     this.storage.setItem(key, value);
-    if (this.storage === memoryStorage) this.#notify();
+    this.#notify();
   }
 
   public remove(key: Keys) {
     this.storage.removeItem(key);
-    if (this.storage === memoryStorage) this.#notify();
+    this.#notify();
   }
 
   public key(idx: number) {
@@ -66,21 +67,22 @@ class SafeStorage<Keys extends string> implements IStorage<Keys> {
   }
 
   public getSnapshot = (): Record<Keys, string | null> => {
-    for (const key in this.snapshot) {
-      delete this.snapshot[key];
-    }
+    if (this.dirty) {
+      this.snapshot = {};
+      for (let keys = 0; keys < this.storage.length; keys++) {
+        const key = this.key(keys);
+        if (!key) continue;
+        this.snapshot[key] = this.get(key);
+      }
 
-    for (let keys = 0; keys < this.storage.length; keys++) {
-      const key = this.key(keys);
-      if (!key) continue;
-      this.snapshot[key] = this.get(key);
+      this.dirty = false;
     }
 
     return this.snapshot as Record<Keys, string | null>;
   };
 
   #notify() {
-    this.snapshot = {};
+    this.dirty = true;
     this.listeners.forEach((listener) => listener());
   }
 

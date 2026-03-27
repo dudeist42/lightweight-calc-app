@@ -17,7 +17,7 @@ const useStyles = ({
   theme: ITheme;
   color: NonNullable<TButtonProps['color']>;
 }) => ({
-  toggleButton: css({
+  toggleButtonInactive: css({
     backgroundColor: palette[color][mode],
     borderColor: palette[color][mode],
     color: transparentize(palette[color].contrastText, 0.6),
@@ -26,9 +26,6 @@ const useStyles = ({
       borderColor: palette[color].main,
       color: transparentize(palette[color].contrastText, 0.4),
     },
-  }),
-  toggleButtonActive: css({
-    pointerEvents: 'none',
   }),
 });
 
@@ -52,7 +49,7 @@ export const ToggleButton = <Value extends string | undefined = string | undefin
       {...buttonProps}
       onClick={handleClick}
       color={color}
-      css={css(cssProp, selected ? classes.toggleButtonActive : classes.toggleButton)}
+      css={css(cssProp, !selected && classes.toggleButtonInactive)}
     />
   );
 };

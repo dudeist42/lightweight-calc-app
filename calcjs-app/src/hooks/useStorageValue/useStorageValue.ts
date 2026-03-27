@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useEffectEvent, useState, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { createStorage } from '../../services/SafeStorage';
 
 export const useStorageValue = <
@@ -16,46 +16,24 @@ export const useStorageValue = <
   initialValue: Value,
 ): [Value, (value: Value | ((currentValue: Value) => Value)) => void] => {
   const storage = createStorage(type);
-  const storageSnapshot = useSyncExternalStore(storage.subscribe, storage.getSnapshot);
+  const snapshot = useSyncExternalStore(storage.subscribe, storage.getSnapshot);
 
-  const getInitialValue = (): Value => {
-    const storageValue = storageSnapshot[key];
+  const snapshotValue = snapshot[key];
+  const value = useMemo(() => {
+    return snapshotValue ? JSON.parse(snapshotValue) : null;
+  }, [snapshotValue]);
 
-    return storageValue ? JSON.parse(storageValue) : initialValue;
-  };
+  const setValue = useCallback(
+    (nextValue: Value | ((prev: Value) => Value)) => {
+      const raw = storage.get(key);
+      const current = raw ? JSON.parse(raw) : null;
 
-  const [value, setValue] = useState<Value>(getInitialValue());
+      const result = typeof nextValue === 'function' ? nextValue(current) : nextValue;
 
-  const currentValue = storageSnapshot[key];
-  const updateValueWhenStorageChanged = useEffectEvent(() => {
-    let parsedValue: Value | null = null;
-
-    if (currentValue) {
-      try {
-        parsedValue = JSON.parse(currentValue);
-      } catch {}
-    }
-
-    if (parsedValue !== null && value !== parsedValue) {
-      try {
-        setValue(parsedValue);
-      } catch {}
-    }
-  });
-
-  useEffect(() => updateValueWhenStorageChanged(), [currentValue]);
-
-  const handleSetValue = useCallback(
-    (nextValue: Value | ((currentValue: Value) => Value)) => {
-      setValue((currentValue: Value) => {
-        const result = typeof nextValue === 'function' ? nextValue(currentValue) : nextValue;
-        storage.set(key, JSON.stringify(result));
-
-        return result;
-      });
+      storage.set(key, JSON.stringify(result));
     },
     [key, storage],
   );
 
-  return [value, handleSetValue];
+  return [value ?? initialValue, setValue];
 };
