@@ -1,4 +1,4 @@
-import { IRootFactor } from '../nodes/nodeTypes.ts';
+import { IRootFactor } from '../nodes/nodeTypes';
 export declare enum TokenType {
     Number = 0,
     Constant = 1,
@@ -12,5 +12,5 @@ export interface TToken {
     type: TokenType;
     value: string;
 }
-export declare const tokenize: (str: string) => Generator<TToken, any, boolean | undefined>;
+export declare const tokenize: (str: string) => Generator<TToken, undefined, boolean | undefined>;
 export declare const parseExpression: (str: string) => IRootFactor;

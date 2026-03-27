@@ -3,14 +3,14 @@ import { renderOptionsForParser } from 'lw-math';
 import { Buttons } from '../Buttons';
 import { Display } from '../Display';
 import { useCalculatorInput, useStorageValue } from '../../hooks';
-import { History, IHistoryItem } from '../History';
+import { History, THistoryItem } from '../History';
 
 export const Calculator: FC = () => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDegree, setIsDegree] = useState(false);
-  const [history, setHistory] = useStorageValue<IHistoryItem[]>('local', 'calculator.history', []);
+  const [history, setHistory] = useStorageValue<THistoryItem[]>('local', 'calculator.history', []);
 
-  const { push, evaluate, pop, reset, render, setValue, state } = useCalculatorInput();
+  const { push, evaluate, pop, reset, render, setExpression, state } = useCalculatorInput();
 
   const handleClick = useCallback(
     (action: string | number) => {
@@ -27,12 +27,8 @@ export const Calculator: FC = () => {
   const handleEval = useCallback(() => {
     const answer = evaluate({ isDegree });
     if (!Number.isNaN(answer)) {
-      setHistory((currentHistory: IHistoryItem[]): IHistoryItem[] => [
-        {
-          displayValue: state.value,
-          value: render(renderOptionsForParser),
-          answer: String(answer),
-        },
+      setHistory((currentHistory: THistoryItem[]): THistoryItem[] => [
+        [state.value, render(renderOptionsForParser), String(answer)],
         ...currentHistory.slice(0, 9),
       ]);
     }
@@ -55,7 +51,7 @@ export const Calculator: FC = () => {
         isDegree={isDegree}
         onMeasureChange={setIsDegree}
       />
-      <History items={history} onValueClick={setValue} />
+      <History items={history} onValueClick={setExpression} />
     </>
   );
 };

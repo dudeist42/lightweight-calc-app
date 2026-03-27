@@ -1,38 +1,41 @@
 {
-  "name": "calcjs",
+  "name": "lw-calc",
   "version": "1.0.0",
   "main": "index.js",
-  "repository": "git@github.com:CptHeartless/calcjs.git",
-  "author": "CptHeartless",
+  "repository": "git@github.com:dudeist42/lightweight-calc-app.git",
+  "author": "dudeist42",
   "license": "MIT",
   "private": true,
-  "workspaces": [
-    "lw-math",
-    "calcjs-app"
-  ],
+  "type": "module",
   "scripts": {
-    "build:lw-math": "yarn workspace lw-math build",
-    "build:calcjs-app": "yarn workspace calcjs-app build",
-    "test:lw-math": "yarn workspace lw-math test",
-    "test:calcjs-app": "yarn workspace calcjs-app test",
-    "test": "yarn test:lw-math --run && yarn test:calcjs-app --run",
-    "build": "yarn build:lw-math && yarn build:calcjs-app",
-    "dev": "yarn build:lw-math && yarn workspace calcjs-app dev",
-    "preview": "yarn build && yarn workspace calcjs-app preview",
-    "lint": "eslint . --ext .ts,.tsx,.js --ignore-path .gitignore",
-    "lint:fix": "yarn lint --fix",
+    "build:lw-math": "pnpm --filter lw-math build",
+    "build:calcjs-app": "pnpm --filter calcjs-app build",
+    "test:lw-math": "pnpm --filter lw-math test",
+    "test:calcjs-app": "pnpm --filter calcjs-app test",
+    "test": "pnpm test:lw-math && pnpm test:calcjs-app",
+    "build": "pnpm build:lw-math && pnpm build:calcjs-app",
+    "dev": "pnpm build:lw-math && pnpm --filter calcjs-app dev",
+    "preview": "pnpm build && pnpm --filter calcjs-app preview",
+    "lint": "eslint .",
+    "lint:fix": "pnpm lint --fix",
     "prettier": "prettier . -c",
     "prettier:fix": "prettier . --write"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.3.0",
-    "@typescript-eslint/parser": "^6.3.0",
-    "eslint": "^8.46.0",
-    "eslint-config-alloy": "^5.1.1",
-    "eslint-plugin-react": "^7.33.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "prettier": "^3.0.1",
-    "typescript": "^5.1.6"
+    "eslint": "10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "eslint-plugin-react": "7.37.5",
+    "eslint-plugin-react-hooks": "7.0.1",
+    "prettier": "3.8.1",
+    "typescript": "6.0.2",
+    "typescript-eslint": "^8.57.2"
   },
-  "packageManager": "yarn@3.6.3"
+  "packageManager": "pnpm@10.7.0",
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@<1.1.13": ">=1.1.13",
+      "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3"
+    }
+  }
 }

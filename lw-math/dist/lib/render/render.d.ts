@@ -1,4 +1,4 @@
-import { INode } from '../nodes/nodes.ts';
+import { INode } from '../nodes/nodes';
 export interface IRenderOptions {
     renderBrackets: (node: {
         body: string;

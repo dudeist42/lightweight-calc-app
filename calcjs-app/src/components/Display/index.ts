@@ -1,1 +1,1 @@
-export { type IDisplayProps, Display } from './Display.tsx';
+export { type IDisplayProps, Display } from './Display';

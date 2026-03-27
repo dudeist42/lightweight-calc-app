@@ -70,6 +70,13 @@ const getIsEmptyUnaryOperator = (node: INode): boolean =>
   ((!node.left && !node.right) || (!!node.right && isTerm(node.right) && !node.right.left));
 
 export const pushTerm = (tree: TExpressionFactor, term: ITerm): ITerm | undefined => {
+  if (term.name === TermName.Sub) {
+    const [lastNode] = getLastNode(tree);
+    if (isNumberFactor(lastNode) && lastNode.value.endsWith('E')) {
+      concatNumbers(lastNode, term);
+      return;
+    }
+  }
   const priority = getNodePriority(term);
   const [node, parent] = getTermByPriority(tree, priority);
 
@@ -107,7 +114,14 @@ export const pushTerm = (tree: TExpressionFactor, term: ITerm): ITerm | undefine
 const isNumberScientific = (node: INumberFactor) => node.value.includes('E');
 const isNumberFloat = (node: INumberFactor) => node.value.includes('.');
 const isNumberFinished = (node: INumberFactor) => !node.value.endsWith('.');
-const concatNumbers = (target: INumberFactor, source: INumberFactor) => {
+const concatNumbers = (target: INumberFactor, source: INumberFactor | ITerm) => {
+  if (isTerm(source)) {
+    if (source.name === TermName.Sub && target.value.endsWith('E')) {
+      target.value += source.name;
+    }
+    return;
+  }
+
   if (source.value === 'E' && (!isNumberFinished(target) || isNumberScientific(target))) {
     return;
   }
@@ -154,7 +168,7 @@ export const pushConstantFactor = (tree: TExpressionFactor, factor: IConstantFac
   lastNode.right = factor;
 };
 export const pushPostfixFactor = (tree: TExpressionFactor, factor: IPostfixFactor) => {
-  let [lastNode, parent] = getLastNode(tree);
+  const [lastNode, parent] = getLastNode(tree);
 
   const isLastNodeNotValueFactor =
     (isRootFactor(lastNode) && !lastNode.right) || (isTerm(lastNode) && !lastNode.right);
@@ -272,8 +286,8 @@ export const setValue = (root: IRootFactor, value?: INode | string | number) => 
     typeof value === 'string'
       ? createNodeByString(value)
       : typeof value === 'number'
-      ? createNumberFactor(String(value), String(value).length > 1)
-      : undefined;
+        ? createNumberFactor(String(value), String(value).length > 1)
+        : undefined;
 
   if (root.right && isExpressionFactor(root.right)) {
     root.$$expressions.splice(0, root.$$expressions.length, root.right);

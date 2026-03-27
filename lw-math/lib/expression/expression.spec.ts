@@ -1,8 +1,8 @@
-/* eslint-disable max-nested-callbacks */
 import { describe, expect, it } from 'vitest';
 import { createPostfixFactor } from '../nodes/createNode';
 import { parseExpression } from '../parseExpression/parseExpression';
 import { createExpression } from './expression';
+import { IEvaluateOptions } from '../evaluate/evaluate';
 
 describe('createExpression()', () => {
   describe('.render()', () => {
@@ -498,11 +498,14 @@ describe('createExpression()', () => {
       ['arctan(0.5)', 26.565_051_177_080, { isDegree: true }],
       ['ln(5 + 5)', 2.302_585_092_994_046],
       ['log(5 * 2)', 1],
-    ])('%s = %s', (expr, expected, options) => {
-      const expression = createExpression();
-      expression.setValue(parseExpression(expr));
-      expect(expression.evaluate(options)).toBe(expected);
-    });
+    ] as [string, number, Partial<IEvaluateOptions> | undefined][])(
+      '%s = %s',
+      (expr, expected, options) => {
+        const expression = createExpression();
+        expression.setValue(parseExpression(expr));
+        expect(expression.evaluate(options)).toBe(expected);
+      },
+    );
 
     it('should evaluate custom constant using value from options', () => {
       const expression = createExpression();

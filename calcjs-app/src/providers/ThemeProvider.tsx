@@ -1,17 +1,9 @@
-import {
-  createContext,
-  type FC,
-  ReactNode,
-  useCallback,
-  useContext,
-  useMemo,
-  useState,
-  memo,
-} from 'react';
-import { ThemeProvider as JssThemeProvider } from 'react-jss';
+import { createContext, type FC, ReactNode, useCallback, useContext, useMemo, memo } from 'react';
+import { ThemeProvider as EmotionThemeProvider } from '@emotion/react';
 import { darkTheme, lightTheme } from '../styles';
+import { useStorageValue } from '../hooks';
 export interface IThemeModeContextValue {
-  mode: 'dark' | 'light';
+  mode: 'dark' | 'light' | 'system';
   setMode: (mode: 'dark' | 'light') => void;
   toggleMode: () => void;
 }
@@ -24,17 +16,17 @@ const ThemeModeContext = createContext<IThemeModeContextValue>({
 
 export const useThemeMode = () => useContext(ThemeModeContext);
 
-export interface IThemeProvider {
-  mode?: 'dark' | 'light';
+export interface IThemeProviderProps {
+  mode?: 'dark' | 'light' | 'system';
   children: ReactNode;
 }
-export const ThemeProvider: FC<IThemeProvider> = memo(
-  ({ children, mode: defaultMode = 'light' }) => {
-    const [mode, setMode] = useState(defaultMode);
+export const ThemeProvider: FC<IThemeProviderProps> = memo(
+  ({ children, mode: defaultMode = 'system' }: IThemeProviderProps) => {
+    const [mode, setMode] = useStorageValue('local', 'calculator.theme', defaultMode);
 
     const toggleMode = useCallback(() => {
       setMode((currentMode) => (currentMode === 'light' ? 'dark' : 'light'));
-    }, []);
+    }, [setMode]);
 
     const contextValue = useMemo(
       () => ({
@@ -42,15 +34,17 @@ export const ThemeProvider: FC<IThemeProvider> = memo(
         setMode,
         toggleMode,
       }),
-      [mode, toggleMode],
+      [mode, toggleMode, setMode],
     );
 
     return (
       <ThemeModeContext.Provider value={contextValue}>
-        <JssThemeProvider theme={mode === 'dark' ? darkTheme : lightTheme}>
+        <EmotionThemeProvider theme={mode === 'dark' ? darkTheme : lightTheme}>
           {children}
-        </JssThemeProvider>
+        </EmotionThemeProvider>
       </ThemeModeContext.Provider>
     );
   },
 );
+
+ThemeProvider.displayName = 'ThemeProvider';

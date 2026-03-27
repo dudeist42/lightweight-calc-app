@@ -10,7 +10,7 @@ export class MemoryStorage implements Storage {
   }
 
   public setItem(key: string, value: string) {
-    this.storage[key] = value;
+    this.storage[key] = value ?? undefined;
   }
 
   public getItem(key: string): string | null {
@@ -25,3 +25,5 @@ export class MemoryStorage implements Storage {
     this.storage = {};
   }
 }
+
+export const memoryStorage = new MemoryStorage();

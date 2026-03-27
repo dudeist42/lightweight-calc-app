@@ -1,4 +1,4 @@
-import { keys } from '../utils/utils.ts';
+import { keys } from '../utils/utils';
 import {
   FactorName,
   IBracketsFactor,
@@ -11,7 +11,7 @@ import {
   ITerm,
   NodeTypes,
   TermName,
-} from './nodeTypes.ts';
+} from './nodeTypes';
 
 export const createRootFactor = (): IRootFactor => ({
   type: NodeTypes.Factor,
@@ -46,7 +46,7 @@ export const createConstantFactor = (value: string): IConstantFactor => ({
 export const createNumberFactor = (value: string, isConst = false): INumberFactor => ({
   type: NodeTypes.Factor,
   name: FactorName.Number,
-  value,
+  value: value.replace('e', 'E').replace('+', ''),
   isConst,
 });
 export const createPostfixFactor = (value: string, body?: INode): IPostfixFactor => ({
@@ -73,7 +73,7 @@ enum MatchNodeType {
 const NodeTypeRegex = {
   [MatchNodeType.Bracket]: /^[()]$/,
   [MatchNodeType.Function]: /^(\w+)\(([\w.]+)?(,?)\s?([\w.]+)?\)?$/,
-  [MatchNodeType.Number]: /^[.\dE]+$/,
+  [MatchNodeType.Number]: /^\d*\.?\d*(E-?)?\d*\.?\d*$/,
   [MatchNodeType.Constant]: /^[a-zA-Z]+$/,
   [MatchNodeType.Postfix]: /^[!%]$/,
   [MatchNodeType.Operator]: /^[-/+*]$/,
@@ -84,7 +84,7 @@ const matchStringWithNodeType = (
 ): [MatchNodeType | undefined, RegExpExecArray | null] => {
   let match: RegExpExecArray | null = null;
   let type: MatchNodeType | undefined;
-  for (let nodeType of allowedTypes) {
+  for (const nodeType of allowedTypes) {
     match = NodeTypeRegex[nodeType].exec(str);
     if (match) {
       type = nodeType;
@@ -107,10 +107,10 @@ const createNodeByMatch = (type: MatchNodeType, match: RegExpExecArray): INode =
     return createBracketFactor();
   } else if (type === MatchNodeType.Function) {
     const [, name, argOrBodyStr, comma, bodyStr] = match;
-    let argOrBody = argOrBodyStr
+    const argOrBody = argOrBodyStr
       ? createNodeByString(argOrBodyStr, [MatchNodeType.Number, MatchNodeType.Constant])
       : undefined;
-    let body = bodyStr
+    const body = bodyStr
       ? createNodeByString(bodyStr, [MatchNodeType.Number, MatchNodeType.Constant])
       : undefined;
     return createFunctionFactor(name, Boolean(comma), {

@@ -1,10 +1,17 @@
 import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react-swc';
+import react from '@vitejs/plugin-react';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   base: '',
-  plugins: [react()],
+  plugins: [
+    react({
+      jsxImportSource: '@emotion/react',
+      babel: {
+        plugin: '@emotion/babel-plugin',
+      },
+    }),
+  ],
   server: {
     watch: {
       ignored: ['!**/node_modules/lw-math/**'],
@@ -12,8 +19,5 @@ export default defineConfig({
   },
   optimizeDeps: {
     exclude: ['lw-math'],
-  },
-  resolve: {
-    preserveSymlinks: true,
   },
 });

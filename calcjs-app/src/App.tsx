@@ -1,30 +1,30 @@
 import { useEffect, type FC } from 'react';
-import { createUseStyles } from 'react-jss';
 import { Calculator } from './components/Calculator';
 import { useThemeMode } from './providers/ThemeProvider';
 import { useMediaQuery } from './hooks';
+import { css, Global, useTheme } from '@emotion/react';
+import { ITheme } from './styles';
 
-const useStyles = createUseStyles(({ spacing, palette }) => ({
-  app: {
-    padding: spacing(1.5),
-    color: palette.text.primary,
-  },
-  '@global body': {
-    backgroundColor: palette.background.default,
-  },
-}));
+const useStyles = ({ spacing, palette }: ITheme) => ({
+  app: css({ padding: spacing(1.5), color: palette.text.primary }),
+  body: css({ backgroundColor: palette.background.default }),
+});
 
 export const App: FC = () => {
-  const classes = useStyles();
+  const theme = useTheme();
+  const classes = useStyles(theme);
   const mode = useMediaQuery('(prefers-color-scheme: dark)') ? 'dark' : 'light';
-  const { setMode } = useThemeMode();
+  const { setMode, mode: currentMode } = useThemeMode();
 
   useEffect(() => {
-    setMode(mode);
-  }, [mode, setMode]);
+    if (currentMode === 'system') {
+      setMode(mode);
+    }
+  }, [mode, setMode, currentMode]);
 
   return (
-    <div className={classes.app}>
+    <div css={classes.app}>
+      <Global styles={{ body: classes.body }} />
       <Calculator />
     </div>
   );

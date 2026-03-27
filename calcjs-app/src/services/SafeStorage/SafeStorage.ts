@@ -1,10 +1,12 @@
-import { MemoryStorage } from './MemoryStorage';
+import { memoryStorage } from './MemoryStorage';
 
-export interface IStorage {
-  set: (key: string, value: string) => void;
-  get: (key: string) => string | null;
-  key: (idx: number) => string | null;
-  remove: (key: string) => void;
+export interface IStorage<Keys extends string> {
+  set: (key: Keys, value: string) => void;
+  get: (key: Keys) => string | null;
+  key: (idx: number) => Keys | null;
+  remove: (key: Keys) => void;
+  getSnapshot: () => Record<Keys, string | null>;
+  subscribe: (listener: () => void) => () => void;
   length: number;
 }
 
@@ -17,8 +19,10 @@ const isLocalStorageSupported = (): boolean => {
   }
 };
 
-export class SafeStorage implements IStorage {
+class SafeStorage<Keys extends string> implements IStorage<Keys> {
   private storage: Storage;
+  private listeners = new Set<() => void>();
+  private snapshot: Partial<Record<Keys, string | null>> = {};
 
   public get length() {
     return this.storage.length;
@@ -27,24 +31,78 @@ export class SafeStorage implements IStorage {
   public constructor(type: 'session' | 'local' = 'session') {
     if (isLocalStorageSupported()) {
       this.storage = type === 'local' ? localStorage : sessionStorage;
+      this.#subscribe();
     } else {
-      this.storage = new MemoryStorage();
+      this.storage = memoryStorage;
     }
   }
 
-  public get(key: string) {
+  public get(key: Keys) {
     return this.storage.getItem(key);
   }
 
-  public set(key: string, value: string) {
+  public set(key: Keys, value: string) {
     this.storage.setItem(key, value);
+    if (this.storage === memoryStorage) this.#notify();
   }
 
-  public remove(key: string) {
+  public remove(key: Keys) {
     this.storage.removeItem(key);
+    if (this.storage === memoryStorage) this.#notify();
   }
 
   public key(idx: number) {
-    return this.storage.key(idx);
+    return this.storage.key(idx) as Keys | null;
   }
+
+  public subscribe = (listener: () => void) => {
+    this.listeners.add(listener);
+
+    return () => this.unsubscribe(listener);
+  };
+
+  public unsubscribe(listener: () => void) {
+    this.listeners.delete(listener);
+  }
+
+  public getSnapshot = (): Record<Keys, string | null> => {
+    for (const key in this.snapshot) {
+      delete this.snapshot[key];
+    }
+
+    for (let keys = 0; keys < this.storage.length; keys++) {
+      const key = this.key(keys);
+      if (!key) continue;
+      this.snapshot[key] = this.get(key);
+    }
+
+    return this.snapshot as Record<Keys, string | null>;
+  };
+
+  #notify() {
+    this.snapshot = {};
+    this.listeners.forEach((listener) => listener());
+  }
+
+  #subscribe() {
+    window.addEventListener('storage', this.#handleStorageEvent);
+  }
+
+  #handleStorageEvent = (event: StorageEvent) => {
+    if (event.storageArea === this.storage) {
+      this.#notify();
+    }
+  };
 }
+
+const storages: Partial<Record<'session' | 'local', SafeStorage<string>>> = {};
+
+export const createStorage = (type: 'session' | 'local') => {
+  if (storages[type]) {
+    return storages[type];
+  } else {
+    storages[type] = new SafeStorage(type);
+
+    return storages[type];
+  }
+};

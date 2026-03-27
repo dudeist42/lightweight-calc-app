@@ -5,19 +5,16 @@
     "module": "ESNext",
     "lib": ["ES2022"],
     "skipLibCheck": true,
-
-    /* Bundler mode */
+    "paths": { "lw-math": ["./lib/index.ts"] },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-
-    /* Linting */
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
   },
   "include": ["lib"],
   "exclude": ["lib/**/*.spec.ts", "lib/**/*.test.ts"]

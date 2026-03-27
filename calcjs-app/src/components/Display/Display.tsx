@@ -1,8 +1,9 @@
 import { forwardRef } from 'react';
-import { createUseStyles } from 'react-jss';
 import { IoMoonOutline, IoSunnyOutline } from 'react-icons/io5';
 import { useThemeMode } from '../../providers/ThemeProvider';
 import { IconButton } from '../../ui';
+import { css, useTheme } from '@emotion/react';
+import { ITheme } from '../../styles';
 
 export interface IDisplayProps {
   value: string;
@@ -11,8 +12,8 @@ export interface IDisplayProps {
   isEvaluated: boolean;
 }
 
-const useStyles = createUseStyles(({ palette, spacing }) => ({
-  root: {
+const useStyles = ({ palette, spacing }: ITheme) => ({
+  root: css({
     display: 'flex',
     flexDirection: 'row',
     margin: spacing(1, 0),
@@ -24,34 +25,34 @@ const useStyles = createUseStyles(({ palette, spacing }) => ({
     '&:focus': {
       borderColor: palette.primary.main,
     },
-  },
-  adornment: {
+  }),
+  adornment: css({
     display: 'flex',
     alignSelf: 'center',
-  },
-  content: {
+  }),
+  content: css({
     width: '100%',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'end',
     overflow: 'hidden',
-  },
-  answer: {
+  }),
+  answer: css({
     color: palette.text.secondary,
     paddingBottom: spacing(0.5),
     fontSize: '0.875em',
     whiteSpace: 'nowrap',
     overflow: 'hidden',
-  },
-  input: {
+  }),
+  input: css({
     whiteSpace: 'nowrap',
     color: palette.text.primary,
     fontSize: '1.5em',
     '@global .bracket-placeholder': {
       opacity: 0.5,
     },
-  },
-  themeModeButton: {
+  }),
+  themeModeButton: css({
     '& circle, & path': {
       transition: 'fill 0.15s ease-in',
       fill: 'transparent',
@@ -61,37 +62,38 @@ const useStyles = createUseStyles(({ palette, spacing }) => ({
         fill: 'currentcolor',
       },
     },
-  },
-}));
+  }),
+});
 
 export const Display = forwardRef<HTMLInputElement, IDisplayProps>(
   ({ value, answer, isError, isEvaluated }, ref) => {
-    const classes = useStyles();
+    const theme = useTheme();
+    const classes = useStyles(theme);
     const { mode, toggleMode } = useThemeMode();
 
     const visibleValue = isEvaluated ? answer : value;
 
     return (
-      <div tabIndex={0} className={classes.root} ref={ref}>
-        <div className={classes.adornment}>
-          <IconButton onClick={toggleMode} className={classes.themeModeButton}>
+      <div tabIndex={0} css={classes.root} ref={ref}>
+        <div css={classes.adornment}>
+          <IconButton onClick={toggleMode} css={classes.themeModeButton}>
             {mode === 'light' ? <IoMoonOutline /> : <IoSunnyOutline />}
           </IconButton>
         </div>
-        <div className={classes.content}>
+        <div css={classes.content}>
           <div
-            className={classes.answer}
+            css={classes.answer}
             dangerouslySetInnerHTML={{
               __html:
                 isEvaluated && !isError
                   ? `${value} =`
                   : Number.isNaN(answer)
-                  ? '&nbsp'
-                  : `Ans = ${answer}`,
+                    ? '&nbsp'
+                    : `Ans = ${answer}`,
             }}
           />
           <div
-            className={classes.input}
+            css={classes.input}
             dangerouslySetInnerHTML={{ __html: isError ? 'Error!' : visibleValue }}
           />
         </div>
@@ -99,3 +101,4 @@ export const Display = forwardRef<HTMLInputElement, IDisplayProps>(
     );
   },
 );
+Display.displayName = 'Display';

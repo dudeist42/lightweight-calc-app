@@ -1,18 +1,24 @@
-import clsx from 'clsx';
-import type { JSX, FC } from 'react';
-import { createUseStyles, DefaultTheme, useTheme } from 'react-jss';
+import { css, SerializedStyles, useTheme } from '@emotion/react';
+import { ITheme } from '../../styles';
+import { FC } from 'react';
+import { JSX } from '@emotion/react/jsx-runtime';
+import { transparentize } from 'color2k';
 
 export type TButtonProps = {
   color?: 'default' | 'primary' | 'secondary';
   variant?: 'contained' | 'outlined';
-  className?: string;
   fullWidth?: boolean;
+  css?: SerializedStyles;
 } & JSX.IntrinsicElements['button'];
 
-type TButtonStylesProps = Pick<Required<TButtonProps>, 'color' | 'fullWidth'>;
+type TButtonStylesProps = { theme: ITheme } & Pick<Required<TButtonProps>, 'color' | 'fullWidth'>;
 
-const useStyles = createUseStyles(({ palette, spacing, mode }) => ({
-  button: ({ fullWidth }: TButtonStylesProps) => ({
+const useStyles = ({
+  theme: { palette, spacing, mode },
+  fullWidth,
+  color,
+}: TButtonStylesProps) => ({
+  button: css({
     cursor: 'pointer',
     fontFamily: 'Roboto',
     margin: 0,
@@ -24,7 +30,7 @@ const useStyles = createUseStyles(({ palette, spacing, mode }) => ({
     transition: '0.15s ease-out',
     transitionProperty: 'background-color, color, border-color',
   }),
-  containedVariantButton: ({ color }: TButtonStylesProps) => ({
+  containedVariantButton: css({
     background: palette[color].main,
     color: palette[color].contrastText,
     border: `1px solid ${palette[color].main}`,
@@ -33,31 +39,33 @@ const useStyles = createUseStyles(({ palette, spacing, mode }) => ({
       borderColor: palette[color][mode === 'dark' ? 'light' : 'dark'],
     },
   }),
-  outlinedVariantButton: ({ color }: TButtonStylesProps) => ({
+  outlinedVariantButton: css({
     background: 'transparent',
     color: palette[color].main,
     border: `1px solid ${palette[color].main}`,
     '&:hover': {
+      backgroundColor: transparentize(palette[color].main, 0.9),
       borderColor: palette[color][mode === 'dark' ? 'light' : 'dark'],
       color: palette[color][mode === 'dark' ? 'light' : 'dark'],
     },
   }),
-}));
+});
 
 export const Button: FC<TButtonProps> = ({
-  className,
+  css: cssProp,
   color = 'default',
   fullWidth = false,
   variant = 'contained',
   ...props
 }) => {
-  const theme = useTheme<DefaultTheme>();
+  const theme = useTheme();
   const classes = useStyles({ color, fullWidth, theme });
+
   return (
     <button
       type="button"
       {...props}
-      className={clsx(classes.button, classes[`${variant}VariantButton`], className)}
+      css={css(classes.button, classes[`${variant}VariantButton`], cssProp)}
     />
   );
 };

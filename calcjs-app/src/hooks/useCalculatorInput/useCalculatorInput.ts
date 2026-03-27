@@ -17,15 +17,8 @@ export const calculatorDisplayOptions: IRenderOptions = {
     sqrt: ({ right, isClosed }) =>
       `${Symbols.Root}(${right}${isClosed ? ')' : Symbols.BracketPlaceholder}`,
   },
-  constants: {
-    Pi: Symbols.Pi,
-  },
-  operators: {
-    '+': Symbols.Add,
-    '-': Symbols.Sub,
-    '*': Symbols.Mul,
-    '/': Symbols.Div,
-  },
+  constants: { Pi: Symbols.Pi },
+  operators: { '+': Symbols.Add, '-': Symbols.Sub, '*': Symbols.Mul, '/': Symbols.Div },
 };
 
 export interface IDisplayState {
@@ -48,43 +41,27 @@ export interface IUseCalculatorInputValue {
   push: (node: string | number) => void;
   evaluate: (options?: Partial<IEvaluateOptions>) => number;
   render: (options?: Partial<IRenderOptions>) => string;
-  setValue: (value: string) => void;
+  setExpression: (value: string) => void;
   pop: () => void;
   reset: () => void;
   state: IDisplayState;
 }
 const evaluateValueAction = (payload: { answer: number; isError?: boolean }) =>
-  ({
-    type: 'evaluate',
-    payload,
-  }) as const;
+  ({ type: 'evaluate', payload }) as const;
 const updateValueAction = (payload: { value: string; isDirty?: boolean }) =>
-  ({
-    type: 'update',
-    payload,
-  }) as const;
-const setValueAction = (payload: { value: string }) =>
-  ({
-    type: 'set',
-    payload,
-  }) as const;
-const resetAction = () =>
-  ({
-    type: 'reset',
-  }) as const;
+  ({ type: 'update', payload }) as const;
+const setValueAction = (payload: { value: string }) => ({ type: 'set', payload }) as const;
+const resetAction = () => ({ type: 'reset' }) as const;
 type TCalculatorDisplayActionType =
   | ReturnType<typeof updateValueAction>
   | ReturnType<typeof evaluateValueAction>
   | ReturnType<typeof resetAction>
   | ReturnType<typeof setValueAction>;
+
 const displayReducer = (state: IDisplayState, action: TCalculatorDisplayActionType) => {
   switch (action.type) {
     case 'set': {
-      return {
-        ...defaultDisplayState,
-        value: action.payload.value,
-        isDirty: true,
-      };
+      return { ...defaultDisplayState, value: action.payload.value, isDirty: true };
     }
     case 'evaluate': {
       return {
@@ -104,10 +81,7 @@ const displayReducer = (state: IDisplayState, action: TCalculatorDisplayActionTy
       };
     }
     case 'reset': {
-      return {
-        ...defaultDisplayState,
-        answer: state.answer,
-      };
+      return { ...defaultDisplayState, answer: state.answer };
     }
   }
 };
@@ -156,9 +130,7 @@ export const useCalculatorInput = (): IUseCalculatorInputValue => {
         expressionRef.current.push(node);
       }
       dispatch(
-        updateValueAction({
-          value: expressionRef.current.render(calculatorDisplayOptions),
-        }),
+        updateValueAction({ value: expressionRef.current.render(calculatorDisplayOptions) }),
       );
     },
     [state.isEvaluated, state.answer, state.isDirty],
@@ -172,7 +144,7 @@ export const useCalculatorInput = (): IUseCalculatorInputValue => {
     const value = expressionRef.current.render(calculatorDisplayOptions);
     dispatch(
       updateValueAction({
-        value: expressionRef.current.render(calculatorDisplayOptions),
+        value,
         isDirty: value !== '0',
       }),
     );
@@ -187,7 +159,7 @@ export const useCalculatorInput = (): IUseCalculatorInputValue => {
     return expressionRef.current.render(options);
   }, []);
 
-  const setValue = useCallback((value: string) => {
+  const setExpression = useCallback((value: string) => {
     try {
       expressionRef.current.setValue(parseExpression(value));
       dispatch(setValueAction({ value: expressionRef.current.render(calculatorDisplayOptions) }));
@@ -198,13 +170,5 @@ export const useCalculatorInput = (): IUseCalculatorInputValue => {
     }
   }, []);
 
-  return {
-    setValue,
-    push,
-    state,
-    evaluate,
-    pop,
-    reset,
-    render,
-  };
+  return { setExpression, push, state, evaluate, pop, reset, render };
 };

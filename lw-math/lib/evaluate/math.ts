@@ -1,4 +1,4 @@
-import { toDegree, toRadian } from './utils.ts';
+import { toDegree, toRadian } from './utils';
 
 export const add = (a: number, b: number) => a + b;
 export const sub = (a: number, b: number) => a - b;

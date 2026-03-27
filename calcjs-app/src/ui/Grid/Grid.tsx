@@ -1,9 +1,9 @@
 import type { ReactNode, FC } from 'react';
-import { type DefaultTheme, createUseStyles, useTheme } from 'react-jss';
-import clsx from 'clsx';
+import { ITheme } from '../../styles';
+import { css, SerializedStyles, useTheme } from '@emotion/react';
 
 export interface IGridProps {
-  className?: string;
+  css?: SerializedStyles;
   templateAreas?: string;
   templateColumns?: string;
   templateRows?: string;
@@ -16,10 +16,10 @@ export interface IGridProps {
   children: ReactNode;
 }
 
-type TUseStyleProps = Omit<IGridProps, 'children'>;
+type TUseStyleProps = { theme: ITheme } & Omit<IGridProps, 'children'>;
 
-const useStyles = createUseStyles((theme) => ({
-  grid: (props: TUseStyleProps) => ({
+const useStyles = ({ theme, ...props }: TUseStyleProps) => ({
+  grid: css({
     gridArea: props.area,
     gridColumnStart: props.columnStart,
     gridColumnEnd: props.columnEnd,
@@ -33,10 +33,10 @@ const useStyles = createUseStyles((theme) => ({
         }
       : {}),
   }),
-}));
+});
 
 export const Grid: FC<IGridProps> = ({
-  className,
+  css: cssProp,
   templateColumns,
   templateRows,
   templateAreas,
@@ -48,7 +48,7 @@ export const Grid: FC<IGridProps> = ({
   columnEnd,
   children,
 }) => {
-  const theme = useTheme<DefaultTheme>();
+  const theme = useTheme();
   const classes = useStyles({
     container,
     templateColumns,
@@ -61,5 +61,5 @@ export const Grid: FC<IGridProps> = ({
     gap,
     theme,
   });
-  return <div className={clsx(classes.grid, className)}>{children}</div>;
+  return <div css={css(classes.grid, cssProp)}>{children}</div>;
 };

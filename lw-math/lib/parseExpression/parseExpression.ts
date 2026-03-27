@@ -6,11 +6,11 @@ import {
   createPostfixFactor,
   createRootFactor,
   createTerm,
-} from '../nodes/createNode.ts';
-import { TermPriority } from '../nodes/manipulation.ts';
-import { INode, IRootFactor, TermName, TExpressionFactor } from '../nodes/nodeTypes.ts';
+} from '../nodes/createNode';
+import { TermPriority } from '../nodes/manipulation';
+import { INode, IRootFactor, TermName, TExpressionFactor } from '../nodes/nodeTypes';
 
-const rNumber = /^[\d.E]+/;
+const rNumber = /^\d+(?:\.\d+)?(?:E-?\d+(?:.\d+)?)?/i;
 const rConst = /^\w+/;
 const rFunc = /^\w+\(/;
 const rOperator = /^[-/*+]/;
@@ -44,7 +44,7 @@ export interface TToken {
   value: string;
 }
 
-export const tokenize = function* (str: string): Generator<TToken, any, boolean | undefined> {
+export const tokenize = function* (str: string): Generator<TToken, undefined, boolean | undefined> {
   let caret = 0;
   let isPeek: boolean | undefined = false;
 
@@ -52,7 +52,7 @@ export const tokenize = function* (str: string): Generator<TToken, any, boolean 
     caret += str.slice(caret).match(rWhiteSpace)?.[0].length ?? 0;
     const part = str.slice(caret);
 
-    for (let [tokenType, regex] of TypeToRegex) {
+    for (const [tokenType, regex] of TypeToRegex) {
       const match = part.match(regex)?.[0];
       if (match) {
         if (isPeek) caret -= match.length;
@@ -67,12 +67,20 @@ export const tokenize = function* (str: string): Generator<TToken, any, boolean 
   }
 };
 
+const createTokenStream = (str: string) => {
+  const stream = tokenize(str);
+
+  return (peek?: boolean) => {
+    return stream.next(peek).value;
+  };
+};
+
 export const parseExpression = (str: string) => {
-  const tokenStream = tokenize(str);
+  const next = createTokenStream(str);
   const expressionFactors: TExpressionFactor[] = [];
 
   const parseUnaryExpression = (): INode => {
-    const token = tokenStream.next().value;
+    const token = next();
     if (!token) throw new Error('Invalid input');
 
     if (token.type === TokenType.Number) {
@@ -87,7 +95,7 @@ export const parseExpression = (str: string) => {
       const bracketsFactor = createBracketFactor();
       expressionFactors.unshift(bracketsFactor);
       const expression = parseBinaryExpression(0);
-      if (tokenStream.next()?.value.value !== ')' || Array.isArray(expression)) {
+      if (next()?.value !== ')' || Array.isArray(expression)) {
         throw new Error('Expected ")"');
       }
       bracketsFactor.right = expression;
@@ -99,7 +107,7 @@ export const parseExpression = (str: string) => {
       const functionFactor = createFunctionFactor(token.value.slice(0, -1));
       expressionFactors.unshift(functionFactor);
       const expression = parseBinaryExpression(0);
-      if (tokenStream.next()?.value.value !== ')') {
+      if (next()?.value !== ')') {
         throw new Error('Expected ")"');
       }
       if (Array.isArray(expression)) {
@@ -117,10 +125,10 @@ export const parseExpression = (str: string) => {
 
     if (token.type === TokenType.Operator) {
       let arg = parseUnaryExpression();
-      while (tokenStream.next(true)?.value?.type === TokenType.PostfixOperator) {
-        arg = createPostfixFactor(tokenStream.next().value.value, arg);
+      while (next(true)?.type === TokenType.PostfixOperator) {
+        arg = createPostfixFactor(next()!.value, arg);
       }
-      const term = createTerm(token.value);
+      const term = createTerm(token.value as TermName);
       term.right = arg;
       return term;
     }
@@ -142,26 +150,26 @@ export const parseExpression = (str: string) => {
   const parseBinaryExpression = (minPriority = 0): INode | [INode, INode] => {
     let left = parseUnaryExpression();
 
-    while (tokenStream.next(true)?.value?.type === TokenType.PostfixOperator) {
-      left = createPostfixFactor(tokenStream.next().value.value, left);
+    while (next(true)?.type === TokenType.PostfixOperator) {
+      left = createPostfixFactor(next()!.value, left);
     }
 
     while (true) {
-      const operatorOrComma = tokenStream.next(true).value;
+      const operatorOrComma = next(true);
       if (!operatorOrComma) return left;
       const priority = getTokenPriority(operatorOrComma);
       if (priority <= minPriority) {
         return left;
       } else if (operatorOrComma.type === TokenType.Comma) {
-        tokenStream.next();
+        next();
         const right = parseBinaryExpression();
         if (Array.isArray(right)) throw new Error('Unexpected comma');
         return [left, right];
       }
-      tokenStream.next();
+      next();
       const right = parseBinaryExpression(priority);
       if (Array.isArray(right)) throw new Error('Unexpected comma');
-      const term = createTerm(operatorOrComma.value);
+      const term = createTerm(operatorOrComma.value as TermName);
       term.left = left;
       term.right = right;
       left = term;

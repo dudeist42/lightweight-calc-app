@@ -1,4 +1,4 @@
-import { IBracketsFactor, IConstantFactor, IFunctionFactor, INode, INumberFactor, IPostfixFactor, IRootFactor, ITerm, TermName } from './nodeTypes.ts';
+import { IBracketsFactor, IConstantFactor, IFunctionFactor, INode, INumberFactor, IPostfixFactor, IRootFactor, ITerm, TermName } from './nodeTypes';
 export declare const createRootFactor: () => IRootFactor;
 export declare const createBracketFactor: () => IBracketsFactor;
 export declare const createFunctionFactor: (name: string, isArgRequired?: boolean, options?: {

@@ -1,4 +1,4 @@
-import { spacing } from './utilities.ts';
+import { spacing } from './utilities';
 import { getContrast, hsla, parseToHsla } from 'color2k';
 
 export interface IPaletteColor {

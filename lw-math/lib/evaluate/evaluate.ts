@@ -13,7 +13,7 @@ import {
   isTerm,
   ITerm,
   TermName,
-} from '../nodes/nodes.ts';
+} from '../nodes/nodes';
 import {
   add,
   arccos,
@@ -32,10 +32,12 @@ import {
   sqrt,
   sub,
   tan,
-} from './math.ts';
+} from './math';
 
 export const evalNumber = (node: INumberFactor): number => {
-  let [floatPart, scientificPart] = node.value.split('E');
+  const parts = node.value.split('E');
+  let floatPart = parts[0];
+  const scientificPart = parts[1];
 
   if (floatPart === '.') {
     floatPart = `${floatPart}0`;

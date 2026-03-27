@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": true,
+    "declaration": true,
+    "declarationDir": "./dist"
+  },
+  "include": ["./lib"]
+}

@@ -10,7 +10,7 @@ export {
   isRootFactor,
   isTerm,
   TermName,
-} from './nodeTypes.ts';
+} from './nodeTypes';
 
 export type {
   IBracketsFactor,
@@ -24,13 +24,8 @@ export type {
   ITerm,
   TBracketLikeFactor,
   TExpressionFactor,
-} from './nodeTypes.ts';
+} from './nodeTypes';
 
-export {
-  createNodeByString,
-  createNumberFactor,
-  createTerm,
-  createRootFactor,
-} from './createNode.ts';
+export { createNodeByString, createNumberFactor, createTerm, createRootFactor } from './createNode';
 
-export { closeBracket, pop, push, setValue, getNodePriority } from './manipulation.ts';
+export { closeBracket, pop, push, setValue, getNodePriority } from './manipulation';

@@ -1,2 +1,2 @@
 export { darkTheme, lightTheme } from './theme';
-export type { ITheme } from './utils.ts';
+export type { ITheme } from './utils';

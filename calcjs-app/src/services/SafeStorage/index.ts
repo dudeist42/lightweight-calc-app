@@ -1,1 +1,1 @@
-export { SafeStorage, type IStorage } from './SafeStorage';
+export { createStorage, type IStorage } from './SafeStorage';

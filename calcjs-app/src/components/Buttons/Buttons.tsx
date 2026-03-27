@@ -1,8 +1,8 @@
 import { useState, type FC, type MouseEvent, useCallback } from 'react';
-import { createUseStyles } from 'react-jss';
 import { useKeyboardEvent } from '../../hooks';
 import { Button, Grid, ToggleButton, ToggleButtonGroup } from '../../ui';
 import { Symbols } from './symbols';
+import { css } from '@emotion/react';
 
 const Gap = 0.75;
 
@@ -58,11 +58,11 @@ export interface IButtonsProps {
   onClear: () => void;
 }
 
-const useStyles = createUseStyles({
-  measureButton: {
+const classes = {
+  measureButton: css({
     height: '100%',
-  },
-});
+  }),
+};
 
 export const Buttons: FC<IButtonsProps> = ({
   onClick,
@@ -72,7 +72,6 @@ export const Buttons: FC<IButtonsProps> = ({
   onAllClear,
   onClear,
 }) => {
-  const classes = useStyles();
   const [isInv, setIsInv] = useState(false);
 
   useKeyboardEvent(
@@ -127,10 +126,13 @@ export const Buttons: FC<IButtonsProps> = ({
 
   const handleMouseDownOnClear = useCallback(
     ({ currentTarget }: MouseEvent<HTMLButtonElement>) => {
-      let pressTimeout: NodeJS.Timeout;
+      let pressTimeout: number | null = null;
       const handleMouseUp = () => {
         currentTarget.removeEventListener('mouseup', handleMouseUp);
-        clearTimeout(pressTimeout);
+        if (pressTimeout !== null) {
+          clearTimeout(pressTimeout);
+          pressTimeout = null;
+        }
         onClear();
       };
       pressTimeout = setTimeout(() => {
@@ -152,7 +154,7 @@ export const Buttons: FC<IButtonsProps> = ({
             color="secondary"
             value={String(isDegree)}
             onChange={handleChangeMeasure}
-            className={classes.measureButton}
+            css={classes.measureButton}
           >
             <ToggleButton value="false">Rad</ToggleButton>
             <ToggleButton value="true">Deg</ToggleButton>

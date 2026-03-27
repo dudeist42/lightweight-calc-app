@@ -1,10 +1,10 @@
-import { INode } from '../nodes/nodes.ts';
-import { IRenderOptions } from '../render/render.ts';
-import { IEvaluateOptions } from '../evaluate/evaluate.ts';
+import { INode } from '../nodes/nodes';
+import { IRenderOptions } from '../render/render';
+import { IEvaluateOptions } from '../evaluate/evaluate';
 export declare class Expression {
     #private;
     readonly defaultValue?: string | number | undefined;
-    get root(): import("../nodes/nodeTypes.ts").IRootFactor;
+    get root(): import('..').IRootFactor;
     constructor(defaultValue?: string | number | undefined);
     setValue(value?: INode | string | number): void;
     push(nodeOrValue: INode | string | number): void;

@@ -1,4 +1,4 @@
-# Calculator | [Preview](https://cptheartless.github.io/lightweight-calc-app/calcjs-app/dist/)
+# Calculator | [Preview](https://dudeist42.github.io/lightweight-calc-app/calcjs-app/dist/)
 
 ---
 

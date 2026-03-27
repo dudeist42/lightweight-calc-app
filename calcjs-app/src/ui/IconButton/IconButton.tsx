@@ -1,11 +1,11 @@
-import clsx from 'clsx';
 import { JSX } from 'react';
 import type { FC } from 'react';
-import { createUseStyles } from 'react-jss';
 import { transparentize } from 'color2k';
+import { css, SerializedStyles, useTheme } from '@emotion/react';
+import { ITheme } from '../../styles';
 
-const useStyles = createUseStyles(({ spacing, palette }) => ({
-  root: {
+const useStyles = ({ spacing, palette }: ITheme) => ({
+  root: css({
     cursor: 'pointer',
     padding: spacing(1),
     margin: 0,
@@ -20,17 +20,14 @@ const useStyles = createUseStyles(({ spacing, palette }) => ({
     alignItems: 'center',
     justifyContent: 'center',
     transition: 'background 0.15s ease-in',
-    '&:hover': {
-      backgroundColor: transparentize(palette.text.primary, 0.8),
-    },
-  },
-}));
+    '&:hover': { backgroundColor: transparentize(palette.text.primary, 0.8) },
+  }),
+});
 
-export type TIconButtonProps = {
-  className?: string;
-} & JSX.IntrinsicElements['button'];
+export type TIconButtonProps = { css?: SerializedStyles } & JSX.IntrinsicElements['button'];
 
-export const IconButton: FC<TIconButtonProps> = ({ className, ...props }) => {
-  const classes = useStyles();
-  return <button {...props} className={clsx(classes.root, className)} />;
+export const IconButton: FC<TIconButtonProps> = ({ css: cssProp, ...props }) => {
+  const theme = useTheme();
+  const classes = useStyles(theme);
+  return <button {...props} css={css(classes.root, cssProp)} />;
 };

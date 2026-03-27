@@ -1,518 +1,441 @@
-var lt = (t, r, e) => {
-  if (!r.has(t))
-    throw TypeError("Cannot " + e);
+//#region lib/nodes/nodeTypes.ts
+var e = /* @__PURE__ */ function(e) {
+	return e.Term = "t", e.Factor = "f", e;
+}({}), t = /* @__PURE__ */ function(e) {
+	return e.Add = "+", e.Sub = "-", e.Div = "/", e.Mul = "*", e;
+}({}), n = /* @__PURE__ */ function(e) {
+	return e.Root = "~", e.Function = "f()", e.Brackets = "()", e.Number = "n", e.Constant = "c", e.PostfixOperator = "po", e;
+}({}), r = (t) => t.type === e.Term, i = (t) => t.type === e.Factor, a = (e) => (t) => i(t) && t.name === e, o = a(n.Root), s = a(n.Brackets), c = a(n.Function), l = a(n.Constant), u = a(n.Number), d = a(n.PostfixOperator), f = (e) => o(e) || s(e) || c(e), p = (e) => c(e) || s(e), m = (e) => Object.keys(e), h = () => ({
+	type: e.Factor,
+	name: n.Root,
+	$$expressions: []
+}), g = () => ({
+	type: e.Factor,
+	name: n.Brackets
+}), _ = (t, r, i) => ({
+	type: e.Factor,
+	name: n.Function,
+	value: t,
+	left: i?.arg,
+	right: i?.body,
+	isClosed: r && !!i?.arg && !!i?.body,
+	isArgRequired: r
+}), v = (t) => ({
+	type: e.Factor,
+	name: n.Constant,
+	value: t
+}), y = (t, r = !1) => ({
+	type: e.Factor,
+	name: n.Number,
+	value: t.replace("e", "E").replace("+", ""),
+	isConst: r
+}), b = (t, r) => ({
+	type: e.Factor,
+	name: n.PostfixOperator,
+	value: t,
+	left: void 0,
+	right: r
+}), x = (t) => ({
+	type: e.Term,
+	name: t
+}), S = /* @__PURE__ */ function(e) {
+	return e.Bracket = "0", e.Function = "1", e.Number = "2", e.Constant = "3", e.Postfix = "4", e.Operator = "5", e;
+}(S || {}), C = {
+	[S.Bracket]: /^[()]$/,
+	[S.Function]: /^(\w+)\(([\w.]+)?(,?)\s?([\w.]+)?\)?$/,
+	[S.Number]: /^\d*\.?\d*(E-?)?\d*\.?\d*$/,
+	[S.Constant]: /^[a-zA-Z]+$/,
+	[S.Postfix]: /^[!%]$/,
+	[S.Operator]: /^[-/+*]$/
+}, ee = (e, t = m(C)) => {
+	let n = null, r;
+	for (let i of t) if (n = C[i].exec(e), n) {
+		r = i;
+		break;
+	}
+	return [r, n];
+}, te = (e, t) => {
+	if (e === S.Number) return y(t[0], t[0].length > 1);
+	if (e === S.Constant) return v(t[0]);
+	if (e === S.Operator) return x(t[0]);
+	if (e === S.Postfix) return b(t[0]);
+	if (e === S.Bracket && t[0] === "(") return g();
+	if (e === S.Function) {
+		let [, e, n, r, i] = t, a = n ? w(n, [S.Number, S.Constant]) : void 0, o = i ? w(i, [S.Number, S.Constant]) : void 0;
+		return _(e, !!r, {
+			arg: r ? a : void 0,
+			body: r ? o : a
+		});
+	}
+	throw Error("Unexpected value.\"");
+}, w = (e, t = m(C)) => {
+	let [n, r] = ee(e, t);
+	if (!n || !r) throw Error(`Unexpected string ${e}`);
+	return te(n, r);
+}, T = {
+	[t.Add]: 1,
+	[t.Sub]: 1,
+	[t.Div]: 2,
+	[t.Mul]: 2
+}, E = (e) => r(e) ? T[e.name] : 3, D = (e, t) => e.right && !f(e.right) && !d(e.right) ? D(e.right, e) : [e, t], O = (e, t, n) => e.right && r(e.right) && T[e.right.name] === t ? [e.right, e] : e.right && r(e.right) ? O(e.right, t, e) : [e, n], k = (e, n) => n.name !== t.Sub || n.name === t.Sub && e.name === t.Add, ne = (e) => r(e) && (!e.left && !e.right || !!e.right && r(e.right) && !e.right.left), A = (e, n) => {
+	if (n.name === t.Sub) {
+		let [t] = D(e);
+		if (u(t) && t.value.endsWith("E")) {
+			M(t, n);
+			return;
+		}
+	}
+	let i = E(n), [a, o] = O(e, i);
+	if (!ne(a)) {
+		if (r(a) && a.left && !a.right && o) {
+			if (a.name === n.name) return;
+			if (k(a, n)) return n.left = a.left, a.left = void 0, o.right = n, n;
+		}
+		if (!(!(o ?? a).right && n.name !== t.Sub)) return i > 1 && E(a) < 2 || r(a) && !a.right ? (n.left = a.right, a.right = n) : (n.left = (o ?? a).right, (o ?? a).right = n), n;
+	}
+}, j = (e) => e.value.includes("E"), re = (e) => e.value.includes("."), ie = (e) => !e.value.endsWith("."), M = (e, n) => {
+	if (r(n)) {
+		n.name === t.Sub && e.value.endsWith("E") && (e.value += n.name);
+		return;
+	}
+	if (!(n.value === "E" && (!ie(e) || j(e))) && !(n.value === "." && (re(e) || j(e)))) {
+		if (e.value === "0" && n.value !== "E" && n.value !== ".") {
+			e.value = n.value;
+			return;
+		}
+		e.value += n.value;
+	}
+}, ae = (e, n) => {
+	let [r] = D(e);
+	if (u(r) && !(n.isConst || r.isConst)) {
+		M(r, n);
+		return;
+	}
+	i(r) && (!f(r) || r.right) && (r = A(e, x(t.Mul)) ?? r), r.right = n;
+}, oe = (e, n) => {
+	let [r] = D(e);
+	i(r) && (!f(r) || r.right) && (r = A(e, x(t.Mul)) ?? r), r.right = n;
+}, se = (e, t) => {
+	let [n, i] = D(e);
+	o(n) && !n.right || r(n) && !n.right || (r(n) ? (t.right = n.right, n.right = t) : (t.right = (i ?? n).right, (i ?? n).right = t));
+}, N = (e, n) => {
+	let [r] = D(e);
+	return i(r) && (r = A(e, x(t.Mul)) ?? r), r.right = n, n;
+}, ce = (e, n) => {
+	let [a, s] = D(e);
+	if (a.right && p(a.right) && a.right.isClosed && !n.left) s = a, a = a.right;
+	else if (r(a) && !a.right && !n.left) return;
+	if (!o(a) && s && !n.left) return n.left = s.right, s.right = n, n.left && n.right && (n.isClosed = !0), n;
+	if (n.left) return i(a) && !f(a) && (a = A(e, x(t.Mul)) ?? a), a.right = n, n;
+}, P = (e) => {
+	let [t, n] = D(e);
+	if (t.right && d(t.right)) {
+		t.right = t.right.right;
+		return;
+	}
+	if (t.right && c(t.right) && t.right.isArgRequired) {
+		if (!t.right.right) {
+			t.right = t.right.left;
+			return;
+		}
+		P(t.right);
+		return;
+	}
+	if (t.right && p(t.right)) {
+		if (t.right.isClosed) {
+			t.right.isClosed = !1;
+			return;
+		}
+		if (!t.right.right) {
+			t.right = void 0;
+			return;
+		}
+		P(t.right);
+		return;
+	}
+	if (u(t)) {
+		(t.isConst || t.value.length === 1) && n ? n.right = void 0 : t.value = t.value.slice(0, -1);
+		return;
+	}
+	if (l(t) && n) {
+		n.right = void 0;
+		return;
+	}
+	if (r(t) && n) {
+		n.right = t.left;
+		return;
+	}
+}, F = (e, t) => {
+	e.right = typeof t == "string" ? w(t) : typeof t == "number" ? y(String(t), String(t).length > 1) : void 0, e.right && f(e.right) && e.$$expressions.splice(0, e.$$expressions.length, e.right);
+}, le = (e, t) => {
+	e.$$expressions[0] && !e.$$expressions[0].right && e.$$expressions.shift(), e.$$expressions[0] && c(e.$$expressions[0]) && e.$$expressions[0].isClosed && (e.$$expressions[0].isClosed = !1), P(e), e.right || F(e, t);
+}, I = (e) => e.$$expressions.find((e) => p(e) && !e.isClosed) ?? e, L = (e, t) => {
+	let n = I(e), i = c(n) && n.isArgRequired && n.right && (!r(n.right) || r(n.right) && !!n.right.right), a = t && n.right && u(t) && !t.isConst && u(n.right) && !n.right.isConst;
+	i && !a && !(t && c(t) && t.isArgRequired) && (n.isClosed = !0, L(e, t));
+}, ue = (e) => {
+	let t = I(e), [n] = D(t);
+	c(t) && t.isArgRequired && (L(e), t = I(e)), p(t) && t.right && (!r(n) || r(n) && n.right) && (t.isClosed = !0);
+}, de = (e, t) => {
+	L(e, t);
+	let n = I(e), i;
+	r(t) ? A(n, t) : u(t) ? ae(n, t) : l(t) ? oe(n, t) : d(t) ? se(n, t) : s(t) ? i = N(n, t) : c(t) && (i = t.isArgRequired ? ce(n, t) : N(n, t)), i && e.$$expressions.unshift(i);
+}, R = (e, t) => {
+	let n = e.left ? U(e.left, t) : "", i = e.right ? U(e.right, t) : "", a = t.operators?.[e.name] || e.name, o = e.left && r(e.left) && E(e.left) > 1 && E(e) < 2;
+	return `${n}${n ? " " : ""}${a}${n && !o && i ? " " : ""}${i}`;
+}, z = (e, t) => {
+	let n = e.right ? U(e.right, t) : "";
+	return (t.renderBrackets ?? H.renderBrackets)({
+		body: n,
+		isClosed: !!e.isClosed
+	});
+}, B = (e, t) => {
+	let n = e.left ? U(e.left, t) : "", r = e.right ? U(e.right, t) : "";
+	return (t.renderFunction?.[e.value] ?? t.renderFunction?.default ?? H.renderFunction.default)({
+		left: n,
+		right: r,
+		name: e.value,
+		isClosed: !!e.isClosed
+	});
+}, V = (e, n) => n?.operators?.[t.Sub] ? e.value.replace(t.Sub, n?.operators?.[t.Sub]) : e.value, H = {
+	renderBrackets: ({ body: e, isClosed: t }) => `(${e}${t ? ")" : ""}`,
+	renderFunction: { default: ({ name: e, left: t, right: n, isClosed: r }) => `${e}(${t ? `${t}, ` : ""}${n}${r ? ")" : ""}` },
+	constants: {},
+	operators: {}
+}, U = (e, t = {}) => o(e) && e.right ? U(e.right, t) : r(e) ? R(e, t) : s(e) ? z(e, t) : c(e) ? B(e, t) : u(e) ? V(e, t) : l(e) ? t.constants?.[e.value] ?? e.value : d(e) ? `${e.right ? U(e.right, t) : ""}${e.value}` : "", W = (e) => e * Math.PI / 180, G = (e) => e * 180 / Math.PI, fe = (e, t) => e + t, pe = (e, t) => e - t, me = (e, t) => e / t, he = (e, t) => e * t, ge = Math.pow, _e = (e, t) => Math.abs(e) ** (1 / t) * (e < 0 ? -1 : 1), ve = (e, t) => K(Math.sin(t === "deg" ? W(e) : e), 11), ye = (e, t) => K(Math.cos(t === "deg" ? W(e) : e), 11), be = (e, t) => {
+	let n = Math.tan(t === "deg" ? W(e) : e);
+	return n > 2 ** 53 - 1 ? Infinity : n;
+}, xe = (e, t) => {
+	if (e > 1 || e < -1) throw Error("Argument of arcsin expected value in range = -1 <= a <= 1");
+	let n = Math.asin(e);
+	return t === "deg" ? G(n) : n;
+}, Se = (e, t) => {
+	if (e > 1 || e < -1) throw Error("Argument of acos expected value in range = -1 <= a <= 1");
+	let n = Math.acos(e);
+	return t === "deg" ? G(n) : n;
+}, Ce = (e, t) => {
+	let n = Math.atan(e);
+	return t === "deg" ? G(n) : n;
+}, we = (e) => Math.sqrt(e), Te = (e) => Math.log(e), Ee = (e) => Math.log10(e), K = (e, t = 0) => Number.parseFloat(e.toFixed(t)), q = (e) => {
+	let t = e, n = [
+		.9999999999998099,
+		676.5203681218851,
+		-1259.1392167224028,
+		771.3234287776531,
+		-176.6150291621406,
+		12.507343278686905,
+		-.13857109526572012,
+		9984369578019572e-21,
+		1.5056327351493116e-7
+	];
+	if (t < .5) return Math.PI / Math.sin(t * Math.PI) / q(1 - t);
+	t--;
+	let r = n[0];
+	for (let e = 1; e < 9; e++) r += n[e] / (t + e);
+	let i = t + 7 + .5;
+	return Math.sqrt(2 * Math.PI) * i ** (t + .5) * Math.exp(-i) * r;
+}, De = (e) => {
+	if (e % 1 != 0) return q(e + 1);
+	if (e === 0) return 1;
+	let t = e;
+	for (let n = Math.abs(e); --n;) t *= n;
+	return t;
+}, Oe = (e) => {
+	let t = e.value.split("E"), n = t[0], r = t[1];
+	return n === "." && (n = `${n}0`), parseFloat(n || "1") * (r ? 10 ** Number(r) : 1);
+}, J = {
+	isDegree: !1,
+	defineFunctions: {
+		sin: (e, t, { options: n }) => K(ve(t, n.isDegree ? "deg" : "rad"), 11),
+		cos: (e, t, { options: n }) => K(ye(t, n.isDegree ? "deg" : "rad"), 11),
+		tan: (e, t, { options: n }) => K(be(t, n.isDegree ? "deg" : "rad"), 11),
+		arcsin: (e, t, { options: n }) => K(xe(t, n.isDegree ? "deg" : "rad"), 11),
+		arccos: (e, t, { options: n }) => K(Se(t, n.isDegree ? "deg" : "rad"), 11),
+		arctan: (e, t, { options: n }) => K(Ce(t, n.isDegree ? "deg" : "rad"), 11),
+		ln: (e, t) => Te(t),
+		log: (e, t) => Ee(t),
+		sqrt: (e, t) => we(t),
+		pow: (e, t) => {
+			if (typeof e != "number") throw Error("unknown argument");
+			return ge(e, t);
+		},
+		root: (e, t) => {
+			if (typeof e != "number") throw Error("Unknown argument");
+			return _e(e, t);
+		}
+	},
+	postfixOperators: {
+		"!": (e, t) => De(t),
+		"%": (e, n, { parent: i, options: a }) => i && r(i) && i.left && [t.Sub, t.Add].includes(i.name) ? Y(i.left, a) / 100 * n : n / 100
+	},
+	defineConst: {
+		Pi: Math.PI,
+		e: Math.E
+	}
+}, ke = (e, n) => {
+	if (!e.left && e.name !== t.Sub || !e.right) throw Error(`Operator "${e.name}" cannot be evaluated`);
+	let r = e.left ? Y(e.left, n, e) : 0, i = Y(e.right, n, e);
+	return {
+		[t.Add]: fe,
+		[t.Sub]: pe,
+		[t.Mul]: he,
+		[t.Div]: me
+	}[e.name](r, i);
+}, Ae = (e, t, n) => {
+	if (!e.right || e.isArgRequired && !e.left) throw Error(`Function ${e.value} missed an argument.`);
+	let r = t.defineFunctions?.[e.value] ?? J.defineFunctions[e.value];
+	if (!r) throw Error(`Unknown function "${e.value}"`);
+	return r(e.left && Y(e.left, t, e), e.right && Y(e.right, t, e), {
+		node: e,
+		parent: n,
+		options: t
+	});
+}, je = (e, t, n) => {
+	let r = t.postfixOperators?.[e.value] ?? J.postfixOperators[e.value];
+	if (!r || !e.right) throw Error(`Unknown operator "${e.value}" or operand is undefined.`);
+	return r(void 0, Y(e.right, t, e), {
+		node: e,
+		parent: n,
+		options: t
+	});
+}, Y = (e, t = {}, n) => {
+	if (r(e)) return ke(e, t);
+	if (u(e)) return Oe(e);
+	if (l(e)) return t.defineConst?.[e.value] ?? J.defineConst[e.value];
+	if (c(e)) return Ae(e, t, n);
+	if (d(e)) return je(e, t, n);
+	if (s(e)) {
+		if (!e.right) throw Error("Empty bracket.");
+		return Y(e.right, t, e);
+	}
+	return o(e) ? e.right ? Y(e.right, t, e) : 0 : NaN;
+}, X = class {
+	#e = h();
+	get root() {
+		return this.#e;
+	}
+	constructor(e) {
+		this.defaultValue = e, this.setValue(e);
+	}
+	setValue(e) {
+		e && typeof e == "object" && o(e) ? (this.#e.right = e.right, this.#e.$$expressions = e.$$expressions) : F(this.#e, e);
+	}
+	push(e) {
+		if (typeof e == "number") {
+			this.pushNode(y(String(e), String(e).length > 1));
+			return;
+		}
+		if (e === ")") {
+			this.closeBracket();
+			return;
+		}
+		this.pushNode(typeof e == "string" ? w(e) : e);
+	}
+	pushNode(e) {
+		de(this.#e, e);
+	}
+	pop() {
+		le(this.#e, this.defaultValue);
+	}
+	closeBracket() {
+		ue(this.#e);
+	}
+	render(e) {
+		return U(this.#e, e);
+	}
+	evaluate(e) {
+		return Y(this.#e, e);
+	}
+}, Me = (e) => new X(e), Ne = /^\d+(?:\.\d+)?(?:E-?\d+(?:.\d+)?)?/i, Pe = /^\w+/, Fe = /^\w+\(/, Ie = /^[-/*+]/, Z = /^!/, Le = /^\s*/, Re = /^\(|^\)/, ze = /^,/, Q = /* @__PURE__ */ function(e) {
+	return e[e.Number = 0] = "Number", e[e.Constant = 1] = "Constant", e[e.Function = 2] = "Function", e[e.Operator = 3] = "Operator", e[e.PostfixOperator = 4] = "PostfixOperator", e[e.Bracket = 5] = "Bracket", e[e.Comma = 6] = "Comma", e;
+}({}), $ = [
+	[Q.Number, Ne],
+	[Q.Comma, ze],
+	[Q.Bracket, Re],
+	[Q.Function, Fe],
+	[Q.Constant, Pe],
+	[Q.PostfixOperator, Z],
+	[Q.Operator, Ie]
+], Be = function* (e) {
+	let t = 0, n = !1;
+	for (; t < e.length;) {
+		t += e.slice(t).match(Le)?.[0].length ?? 0;
+		let r = e.slice(t);
+		for (let [e, i] of $) {
+			let a = r.match(i)?.[0];
+			if (a) {
+				n && (t -= a.length), n = yield {
+					type: e,
+					value: a
+				}, t += a.length;
+				break;
+			}
+			if (e === $.at(-1)?.[0]) throw Error("Unexpected token");
+		}
+	}
+}, Ve = (e) => {
+	let t = Be(e);
+	return (e) => t.next(e).value;
+}, He = (e) => {
+	let t = Ve(e), n = [], r = () => {
+		let e = t();
+		if (!e) throw Error("Invalid input");
+		if (e.type === Q.Number) return y(e.value);
+		if (e.type === Q.Constant) return v(e.value);
+		if (e.value === "(") {
+			let e = g();
+			n.unshift(e);
+			let r = a(0);
+			if (t()?.value !== ")" || Array.isArray(r)) throw Error("Expected \")\"");
+			return e.right = r, e.isClosed = !0, e;
+		}
+		if (e.type === Q.Function) {
+			let r = _(e.value.slice(0, -1));
+			n.unshift(r);
+			let i = a(0);
+			if (t()?.value !== ")") throw Error("Expected \")\"");
+			return Array.isArray(i) ? (r.isArgRequired = !0, r.left = i[0], r.right = i[1]) : (r.isArgRequired = !1, r.right = i), r.isClosed = !0, r;
+		}
+		if (e.type === Q.Operator) {
+			let n = r();
+			for (; t(!0)?.type === Q.PostfixOperator;) n = b(t().value, n);
+			let i = x(e.value);
+			return i.right = n, i;
+		}
+		throw Error("unknown token");
+	}, i = (e) => e.type === Q.Operator ? T[e.value] ?? 3 : e.type === Q.Comma ? .5 : 0, a = (e = 0) => {
+		let n = r();
+		for (; t(!0)?.type === Q.PostfixOperator;) n = b(t().value, n);
+		for (;;) {
+			let r = t(!0);
+			if (!r) return n;
+			let o = i(r);
+			if (o <= e) return n;
+			if (r.type === Q.Comma) {
+				t();
+				let e = a();
+				if (Array.isArray(e)) throw Error("Unexpected comma");
+				return [n, e];
+			}
+			t();
+			let s = a(o);
+			if (Array.isArray(s)) throw Error("Unexpected comma");
+			let c = x(r.value);
+			c.left = n, c.right = s, n = c;
+		}
+	};
+	return ((e) => {
+		let t = h();
+		return t.right = e, t.$$expressions = n, t;
+	})((() => {
+		let e = a(0);
+		if (Array.isArray(e)) throw Error("Unexpected comma");
+		return e;
+	})());
+}, Ue = {
+	renderBrackets: ({ body: e }) => `(${e})`,
+	renderFunction: { default: ({ name: e, left: t, right: n }) => `${e}(${t ? `${t}, ` : ""}${n})` },
+	constants: {},
+	operators: {}
 };
-var p = (t, r, e) => (lt(t, r, "read from private field"), e ? e.call(t) : r.get(t)), J = (t, r, e) => {
-  if (r.has(t))
-    throw TypeError("Cannot add the same private member more than once");
-  r instanceof WeakSet ? r.add(t) : r.set(t, e);
-};
-var F = /* @__PURE__ */ ((t) => (t.Term = "t", t.Factor = "f", t))(F || {}), c = /* @__PURE__ */ ((t) => (t.Add = "+", t.Sub = "-", t.Div = "/", t.Mul = "*", t))(c || {}), b = /* @__PURE__ */ ((t) => (t.Root = "~", t.Function = "f()", t.Brackets = "()", t.Number = "n", t.Constant = "c", t.PostfixOperator = "po", t))(b || {});
-const o = (t) => t.type === "t", B = (t) => t.type === "f", A = (t) => (r) => B(r) && r.name === t, M = A(
-  "~"
-  /* Root */
-), S = A(
-  "()"
-  /* Brackets */
-), v = A(
-  "f()"
-  /* Function */
-), U = A(
-  "c"
-  /* Constant */
-), w = A(
-  "n"
-  /* Number */
-), P = A(
-  "po"
-  /* PostfixOperator */
-), R = (t) => M(t) || S(t) || v(t), q = (t) => v(t) || S(t), rt = (t) => Object.keys(t), et = () => ({
-  type: F.Factor,
-  name: b.Root,
-  $$expressions: []
-}), st = () => ({
-  type: F.Factor,
-  name: b.Brackets
-}), it = (t, r, e) => ({
-  type: F.Factor,
-  name: b.Function,
-  value: t,
-  left: e == null ? void 0 : e.arg,
-  right: e == null ? void 0 : e.body,
-  isClosed: r && !!(e != null && e.arg) && !!(e != null && e.body),
-  isArgRequired: r
-}), nt = (t) => ({
-  type: F.Factor,
-  name: b.Constant,
-  value: t
-}), D = (t, r = !1) => ({
-  type: F.Factor,
-  name: b.Number,
-  value: t,
-  isConst: r
-}), L = (t, r) => ({
-  type: F.Factor,
-  name: b.PostfixOperator,
-  value: t,
-  left: void 0,
-  right: r
-}), E = (t) => ({
-  type: F.Term,
-  name: t
-}), j = {
-  0: /^[()]$/,
-  1: /^(\w+)\(([\w.]+)?(,?)\s?([\w.]+)?\)?$/,
-  2: /^[.\dE]+$/,
-  3: /^[a-zA-Z]+$/,
-  4: /^[!%]$/,
-  5: /^[-/+*]$/
-}, ht = (t, r = rt(j)) => {
-  let e = null, s;
-  for (let i of r)
-    if (e = j[i].exec(t), e) {
-      s = i;
-      break;
-    }
-  return [s, e];
-}, gt = (t, r) => {
-  if (t === "2")
-    return D(r[0], r[0].length > 1);
-  if (t === "3")
-    return nt(r[0]);
-  if (t === "5")
-    return E(r[0]);
-  if (t === "4")
-    return L(r[0]);
-  if (t === "0" && r[0] === "(")
-    return st();
-  if (t === "1") {
-    const [, e, s, i, n] = r;
-    let h = s ? I(s, [
-      "2",
-      "3"
-      /* Constant */
-    ]) : void 0, N = n ? I(n, [
-      "2",
-      "3"
-      /* Constant */
-    ]) : void 0;
-    return it(e, !!i, {
-      arg: i ? h : void 0,
-      body: i ? N : h
-    });
-  }
-  throw new Error('Unexpected value."');
-}, I = (t, r = rt(j)) => {
-  const [e, s] = ht(t, r);
-  if (!e || !s)
-    throw new Error(`Unexpected string ${t}`);
-  return gt(e, s);
-}, G = {
-  [c.Add]: 1,
-  [c.Sub]: 1,
-  [c.Div]: 2,
-  [c.Mul]: 2
-}, _ = (t) => o(t) ? G[t.name] : 3, x = (t, r) => t.right && !R(t.right) && !P(t.right) ? x(t.right, t) : [t, r], ut = (t, r, e) => t.right && o(t.right) && G[t.right.name] === r ? [t.right, t] : t.right && o(t.right) ? ut(t.right, r, t) : [t, e], ft = (t, r) => r.name !== c.Sub || r.name === c.Sub && t.name === c.Add, pt = (t) => o(t) && (!t.left && !t.right || !!t.right && o(t.right) && !t.right.left), T = (t, r) => {
-  const e = _(r), [s, i] = ut(t, e);
-  if (!pt(s)) {
-    if (o(s) && s.left && !s.right && i) {
-      if (s.name === r.name)
-        return;
-      if (ft(s, r))
-        return r.left = s.left, s.left = void 0, i.right = r, r;
-    }
-    if (!(!(i ?? s).right && r.name !== c.Sub))
-      return e > 1 && _(s) < 2 || o(s) && !s.right ? (r.left = s.right, s.right = r) : (r.left = (i ?? s).right, (i ?? s).right = r), r;
-  }
-}, K = (t) => t.value.includes("E"), vt = (t) => t.value.includes("."), mt = (t) => !t.value.endsWith("."), dt = (t, r) => {
-  if (!(r.value === "E" && (!mt(t) || K(t))) && !(r.value === "." && (vt(t) || K(t)))) {
-    if (t.value === "0" && r.value !== "E" && r.value !== ".") {
-      t.value = r.value;
-      return;
-    }
-    t.value += r.value;
-  }
-}, yt = (t, r) => {
-  let [e] = x(t);
-  if (w(e) && !(r.isConst || e.isConst)) {
-    dt(e, r);
-    return;
-  }
-  B(e) && (!R(e) || e.right) && (e = T(t, E(c.Mul)) ?? e), e.right = r;
-}, Ft = (t, r) => {
-  let [e] = x(t);
-  B(e) && (!R(e) || e.right) && (e = T(t, E(c.Mul)) ?? e), e.right = r;
-}, xt = (t, r) => {
-  let [e, s] = x(t);
-  M(e) && !e.right || o(e) && !e.right || (o(e) ? (r.right = e.right, e.right = r) : (r.right = (s ?? e).right, (s ?? e).right = r));
-}, Q = (t, r) => {
-  let [e] = x(t);
-  return B(e) && (e = T(t, E(c.Mul)) ?? e), e.right = r, r;
-}, $t = (t, r) => {
-  let [e, s] = x(t);
-  if (e.right && q(e.right) && e.right.isClosed && !r.left)
-    s = e, e = e.right;
-  else if (o(e) && !e.right && !r.left)
-    return;
-  if (!M(e) && s && !r.left)
-    return r.left = s.right, s.right = r, r.left && r.right && (r.isClosed = !0), r;
-  if (r.left)
-    return B(e) && !R(e) && (e = T(t, E(c.Mul)) ?? e), e.right = r, r;
-}, z = (t) => {
-  const [r, e] = x(t);
-  if (r.right && P(r.right)) {
-    r.right = r.right.right;
-    return;
-  }
-  if (r.right && v(r.right) && r.right.isArgRequired) {
-    if (!r.right.right) {
-      r.right = r.right.left;
-      return;
-    }
-    z(r.right);
-    return;
-  }
-  if (r.right && q(r.right)) {
-    if (r.right.isClosed) {
-      r.right.isClosed = !1;
-      return;
-    }
-    if (!r.right.right) {
-      r.right = void 0;
-      return;
-    }
-    z(r.right);
-    return;
-  }
-  if (w(r)) {
-    (r.isConst || r.value.length === 1) && e ? e.right = void 0 : r.value = r.value.slice(0, -1);
-    return;
-  }
-  if (U(r) && e) {
-    e.right = void 0;
-    return;
-  }
-  if (o(r) && e) {
-    e.right = r.left;
-    return;
-  }
-}, at = (t, r) => {
-  t.right = typeof r == "string" ? I(r) : typeof r == "number" ? D(String(r), String(r).length > 1) : void 0, t.right && R(t.right) && t.$$expressions.splice(0, t.$$expressions.length, t.right);
-}, wt = (t, r) => {
-  t.$$expressions[0] && !t.$$expressions[0].right && t.$$expressions.shift(), t.$$expressions[0] && v(t.$$expressions[0]) && t.$$expressions[0].isClosed && (t.$$expressions[0].isClosed = !1), z(t), t.right || at(t, r);
-}, O = (t) => t.$$expressions.find(
-  (r) => q(r) && !r.isClosed
-) ?? t, V = (t, r) => {
-  const e = O(t), i = v(e) && e.isArgRequired && e.right && (!o(e.right) || o(e.right) && !!e.right.right), n = r && e.right && w(r) && !r.isConst && w(e.right) && !e.right.isConst;
-  i && !n && !(r && v(r) && r.isArgRequired) && (e.isClosed = !0, V(t, r));
-}, Et = (t) => {
-  let r = O(t);
-  const [e] = x(r);
-  v(r) && r.isArgRequired && (V(t), r = O(t)), q(r) && r.right && (!o(e) || o(e) && e.right) && (r.isClosed = !0);
-}, bt = (t, r) => {
-  V(t, r);
-  const e = O(t);
-  let s;
-  o(r) ? T(e, r) : w(r) ? yt(e, r) : U(r) ? Ft(e, r) : P(r) ? xt(e, r) : S(r) ? s = Q(e, r) : v(r) && (r.isArgRequired ? s = $t(e, r) : s = Q(e, r)), s && t.$$expressions.unshift(s);
-}, At = (t, r) => {
-  var h;
-  const e = t.left ? y(t.left, r) : "", s = t.right ? y(t.right, r) : "", i = ((h = r.operators) == null ? void 0 : h[t.name]) || t.name, n = t.left && o(t.left) && _(t.left) > 1 && _(t) < 2;
-  return `${e}${e ? " " : ""}${i}${e && !n && s ? " " : ""}${s}`;
-}, Mt = (t, r) => {
-  const e = t.right ? y(t.right, r) : "";
-  return (r.renderBrackets ?? ct.renderBrackets)({
-    body: e,
-    isClosed: !!t.isClosed
-  });
-}, Nt = (t, r) => {
-  var i, n;
-  const e = t.left ? y(t.left, r) : "", s = t.right ? y(t.right, r) : "";
-  return (((i = r.renderFunction) == null ? void 0 : i[t.value]) ?? ((n = r.renderFunction) == null ? void 0 : n.default) ?? ct.renderFunction.default)({
-    left: e,
-    right: s,
-    name: t.value,
-    isClosed: !!t.isClosed
-  });
-}, ct = {
-  renderBrackets: ({ body: t, isClosed: r }) => `(${t}${r ? ")" : ""}`,
-  renderFunction: {
-    default: ({ name: t, left: r, right: e, isClosed: s }) => `${t}(${r ? `${r}, ` : ""}${e}${s ? ")" : ""}`
-  },
-  constants: {},
-  operators: {}
-}, y = (t, r = {}) => {
-  var e;
-  return M(t) && t.right ? y(t.right, r) : o(t) ? At(t, r) : S(t) ? Mt(t, r) : v(t) ? Nt(t, r) : w(t) ? t.value : U(t) ? ((e = r.constants) == null ? void 0 : e[t.value]) ?? t.value : P(t) ? `${t.right ? y(t.right, r) : ""}${t.value}` : "";
-}, X = (t) => t * Math.PI / 180, Y = (t) => t * 180 / Math.PI, kt = (t, r) => t + r, Ct = (t, r) => t - r, Bt = (t, r) => t / r, St = (t, r) => t * r, Pt = Math.pow, Rt = (t, r) => Math.abs(t) ** (1 / r) * (t < 0 ? -1 : 1), Tt = (t, r) => d(Math.sin(r === "deg" ? X(t) : t), 11), It = (t, r) => d(Math.cos(r === "deg" ? X(t) : t), 11), _t = (t, r) => {
-  const e = Math.tan(r === "deg" ? X(t) : t);
-  return e > Number.MAX_SAFE_INTEGER ? Number.POSITIVE_INFINITY : e;
-}, Ot = (t, r) => {
-  if (t > 1 || t < -1)
-    throw new Error("Argument of arcsin expected value in range = -1 <= a <= 1");
-  const e = Math.asin(t);
-  return r === "deg" ? Y(e) : e;
-}, Ut = (t, r) => {
-  if (t > 1 || t < -1)
-    throw new Error("Argument of acos expected value in range = -1 <= a <= 1");
-  const e = Math.acos(t);
-  return r === "deg" ? Y(e) : e;
-}, qt = (t, r) => {
-  const e = Math.atan(t);
-  return r === "deg" ? Y(e) : e;
-}, Dt = (t) => Math.sqrt(t), Wt = (t) => Math.log(t), Lt = (t) => Math.log10(t), d = (t, r = 0) => Number.parseFloat(t.toFixed(r)), ot = (t) => {
-  let r = t;
-  const e = 7, s = [
-    0.9999999999998099,
-    676.5203681218851,
-    -1259.1392167224028,
-    771.3234287776531,
-    -176.6150291621406,
-    12.507343278686905,
-    -0.13857109526572012,
-    9984369578019572e-21,
-    15056327351493116e-23
-  ];
-  if (r < 0.5)
-    return Math.PI / Math.sin(r * Math.PI) / ot(1 - r);
-  r--;
-  let i = s[0];
-  for (let h = 1; h < e + 2; h++)
-    i += s[h] / (r + h);
-  const n = r + e + 0.5;
-  return Math.sqrt(2 * Math.PI) * n ** (r + 0.5) * Math.exp(-n) * i;
-}, jt = (t) => {
-  if (t % 1 !== 0)
-    return ot(t + 1);
-  if (t === 0)
-    return 1;
-  let e = t;
-  for (let s = Math.abs(t); --s; )
-    e *= s;
-  return e;
-}, zt = (t) => {
-  let [r, e] = t.value.split("E");
-  return r === "." && (r = `${r}0`), parseFloat(r || "1") * (e ? 10 ** Number(e) : 1);
-}, Z = {
-  isDegree: !1,
-  defineFunctions: {
-    sin: (t, r, { options: e }) => d(Tt(r, e.isDegree ? "deg" : "rad"), 11),
-    cos: (t, r, { options: e }) => d(It(r, e.isDegree ? "deg" : "rad"), 11),
-    tan: (t, r, { options: e }) => d(_t(r, e.isDegree ? "deg" : "rad"), 11),
-    arcsin: (t, r, { options: e }) => d(Ot(r, e.isDegree ? "deg" : "rad"), 11),
-    arccos: (t, r, { options: e }) => d(Ut(r, e.isDegree ? "deg" : "rad"), 11),
-    arctan: (t, r, { options: e }) => d(qt(r, e.isDegree ? "deg" : "rad"), 11),
-    ln: (t, r) => Wt(r),
-    log: (t, r) => Lt(r),
-    sqrt: (t, r) => Dt(r),
-    pow: (t, r) => {
-      if (typeof t != "number")
-        throw new Error("unknown argument");
-      return Pt(t, r);
-    },
-    root: (t, r) => {
-      if (typeof t != "number")
-        throw new Error("Unknown argument");
-      return Rt(t, r);
-    }
-  },
-  postfixOperators: {
-    "!": (t, r) => jt(r),
-    "%": (t, r, { parent: e, options: s }) => e && o(e) && e.left && [c.Sub, c.Add].includes(e.name) ? m(e.left, s) / 100 * r : r / 100
-  },
-  defineConst: {
-    Pi: Math.PI,
-    e: Math.E
-  }
-}, Gt = (t, r) => {
-  if (!t.left && t.name !== c.Sub || !t.right)
-    throw new Error(`Operator "${t.name}" cannot be evaluated`);
-  const e = t.left ? m(t.left, r, t) : 0, s = m(t.right, r, t);
-  return {
-    [c.Add]: kt,
-    [c.Sub]: Ct,
-    [c.Mul]: St,
-    [c.Div]: Bt
-  }[t.name](e, s);
-}, Vt = (t, r, e) => {
-  var h;
-  if (!t.right || t.isArgRequired && !t.left)
-    throw new Error(`Function ${t.value} missed an argument.`);
-  const s = ((h = r.defineFunctions) == null ? void 0 : h[t.value]) ?? Z.defineFunctions[t.value];
-  if (!s)
-    throw new Error(`Unknown function "${t.value}"`);
-  const i = t.left && m(t.left, r, t), n = t.right && m(t.right, r, t);
-  return s(i, n, { node: t, parent: e, options: r });
-}, Xt = (t, r, e) => {
-  var n;
-  const s = ((n = r.postfixOperators) == null ? void 0 : n[t.value]) ?? Z.postfixOperators[t.value];
-  if (!s || !t.right)
-    throw new Error(`Unknown operator "${t.value}" or operand is undefined.`);
-  const i = m(t.right, r, t);
-  return s(void 0, i, { node: t, parent: e, options: r });
-}, m = (t, r = {}, e) => {
-  var s;
-  if (o(t))
-    return Gt(t, r);
-  if (w(t))
-    return zt(t);
-  if (U(t))
-    return ((s = r.defineConst) == null ? void 0 : s[t.value]) ?? Z.defineConst[t.value];
-  if (v(t))
-    return Vt(t, r, e);
-  if (P(t))
-    return Xt(t, r, e);
-  if (S(t)) {
-    if (!t.right)
-      throw new Error("Empty bracket.");
-    return m(t.right, r, t);
-  }
-  return M(t) ? t.right ? m(t.right, r, t) : 0 : Number.NaN;
-};
-var f;
-class Yt {
-  constructor(r) {
-    J(this, f, et());
-    this.defaultValue = r, this.setValue(r);
-  }
-  get root() {
-    return p(this, f);
-  }
-  setValue(r) {
-    r && typeof r == "object" && M(r) ? (p(this, f).right = r.right, p(this, f).$$expressions = r.$$expressions) : at(p(this, f), r);
-  }
-  push(r) {
-    if (typeof r == "number") {
-      this.pushNode(D(String(r), String(r).length > 1));
-      return;
-    }
-    if (r === ")") {
-      this.closeBracket();
-      return;
-    }
-    this.pushNode(typeof r == "string" ? I(r) : r);
-  }
-  pushNode(r) {
-    bt(p(this, f), r);
-  }
-  pop() {
-    wt(p(this, f), this.defaultValue);
-  }
-  closeBracket() {
-    Et(p(this, f));
-  }
-  render(r) {
-    return y(p(this, f), r);
-  }
-  evaluate(r) {
-    return m(p(this, f), r);
-  }
-}
-f = new WeakMap();
-const nr = (t) => new Yt(t), Zt = /^[\d.E]+/, Ht = /^\w+/, Jt = /^\w+\(/, Kt = /^[-/*+]/, Qt = /^!/, tr = /^\s*/, rr = /^\(|^\)/, er = /^,/, tt = [
-  [0, Zt],
-  [6, er],
-  [5, rr],
-  [2, Jt],
-  [1, Ht],
-  [4, Qt],
-  [3, Kt]
-], sr = function* (t) {
-  var s, i, n;
-  let r = 0, e = !1;
-  for (; r < t.length; ) {
-    r += ((s = t.slice(r).match(tr)) == null ? void 0 : s[0].length) ?? 0;
-    const h = t.slice(r);
-    for (let [N, u] of tt) {
-      const l = (i = h.match(u)) == null ? void 0 : i[0];
-      if (l) {
-        e && (r -= l.length), e = yield { type: N, value: l }, r += l.length;
-        break;
-      }
-      if (N === ((n = tt.at(-1)) == null ? void 0 : n[0]))
-        throw new Error("Unexpected token");
-    }
-  }
-}, ur = (t) => {
-  const r = sr(t), e = [], s = () => {
-    var l, k, C, $;
-    const u = r.next().value;
-    if (!u)
-      throw new Error("Invalid input");
-    if (u.type === 0)
-      return D(u.value);
-    if (u.type === 1)
-      return nt(u.value);
-    if (u.value === "(") {
-      const a = st();
-      e.unshift(a);
-      const g = n(0);
-      if (((l = r.next()) == null ? void 0 : l.value.value) !== ")" || Array.isArray(g))
-        throw new Error('Expected ")"');
-      return a.right = g, a.isClosed = !0, a;
-    }
-    if (u.type === 2) {
-      const a = it(u.value.slice(0, -1));
-      e.unshift(a);
-      const g = n(0);
-      if (((k = r.next()) == null ? void 0 : k.value.value) !== ")")
-        throw new Error('Expected ")"');
-      return Array.isArray(g) ? (a.isArgRequired = !0, a.left = g[0], a.right = g[1]) : (a.isArgRequired = !1, a.right = g), a.isClosed = !0, a;
-    }
-    if (u.type === 3) {
-      let a = s();
-      for (; (($ = (C = r.next(!0)) == null ? void 0 : C.value) == null ? void 0 : $.type) === 4; )
-        a = L(r.next().value.value, a);
-      const g = E(u.value);
-      return g.right = a, g;
-    }
-    throw new Error("unknown token");
-  }, i = (u) => u.type === 3 ? G[u.value] ?? 3 : u.type === 6 ? 0.5 : 0, n = (u = 0) => {
-    var k, C;
-    let l = s();
-    for (; ((C = (k = r.next(!0)) == null ? void 0 : k.value) == null ? void 0 : C.type) === 4; )
-      l = L(r.next().value.value, l);
-    for (; ; ) {
-      const $ = r.next(!0).value;
-      if (!$)
-        return l;
-      const a = i($);
-      if (a <= u)
-        return l;
-      if ($.type === 6) {
-        r.next();
-        const H = n();
-        if (Array.isArray(H))
-          throw new Error("Unexpected comma");
-        return [l, H];
-      }
-      r.next();
-      const g = n(a);
-      if (Array.isArray(g))
-        throw new Error("Unexpected comma");
-      const W = E($.value);
-      W.left = l, W.right = g, l = W;
-    }
-  };
-  return ((u) => {
-    const l = et();
-    return l.right = u, l.$$expressions = e, l;
-  })((() => {
-    const u = n(0);
-    if (Array.isArray(u))
-      throw new Error("Unexpected comma");
-    return u;
-  })());
-}, ar = {
-  renderBrackets: ({ body: t }) => `(${t})`,
-  renderFunction: {
-    default: ({ name: t, left: r, right: e }) => `${t}(${r ? `${r}, ` : ""}${e})`
-  },
-  constants: {},
-  operators: {}
-};
-export {
-  Yt as Expression,
-  nr as createExpression,
-  ur as parseExpression,
-  ar as renderOptionsForParser
-};
+//#endregion
+export { X as Expression, Me as createExpression, He as parseExpression, Ue as renderOptionsForParser };

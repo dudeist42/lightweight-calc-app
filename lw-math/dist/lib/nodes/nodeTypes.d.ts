@@ -69,12 +69,12 @@ interface IFactorNames {
     [FactorName.Root]: IRootFactor;
 }
 export declare const isFactorOf: <N extends FactorName>(name: N) => (node: INode) => node is IFactorNames[N];
-export declare const isRootFactor: (node: INode) => node is IRootFactor;
-export declare const isBracketFactor: (node: INode) => node is IBracketsFactor;
-export declare const isFunctionFactor: (node: INode) => node is IFunctionFactor;
-export declare const isConstantFactor: (node: INode) => node is IConstantFactor;
-export declare const isNumberFactor: (node: INode) => node is INumberFactor;
-export declare const isPostfixFactor: (node: INode) => node is IPostfixFactor;
+export declare const isRootFactor: (node: INode) => node is IFactorNames[FactorName.Root];
+export declare const isBracketFactor: (node: INode) => node is IFactorNames[FactorName.Brackets];
+export declare const isFunctionFactor: (node: INode) => node is IFactorNames[FactorName.Function];
+export declare const isConstantFactor: (node: INode) => node is IFactorNames[FactorName.Constant];
+export declare const isNumberFactor: (node: INode) => node is IFactorNames[FactorName.Number];
+export declare const isPostfixFactor: (node: INode) => node is IFactorNames[FactorName.PostfixOperator];
 export declare const isExpressionFactor: (node: INode) => node is TExpressionFactor;
 export declare const isBracketsLikeFactor: (node: INode) => node is TBracketLikeFactor;
 export {};

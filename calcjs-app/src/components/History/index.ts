@@ -1,1 +1,1 @@
-export { History, type IHistoryItem, type IHistoryProps } from './History';
+export { History, type THistoryItem, type IHistoryProps } from './History';

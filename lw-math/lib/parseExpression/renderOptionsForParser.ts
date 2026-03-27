@@ -1,4 +1,4 @@
-import { IRenderOptions } from '../render/render.ts';
+import { IRenderOptions } from '../render/render';
 
 export const renderOptionsForParser: IRenderOptions = {
   renderBrackets: ({ body }) => `(${body})`,

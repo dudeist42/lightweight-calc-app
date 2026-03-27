@@ -1,2 +1,2 @@
-import { IRenderOptions } from '../render/render.ts';
+import { IRenderOptions } from '../render/render';
 export declare const renderOptionsForParser: IRenderOptions;

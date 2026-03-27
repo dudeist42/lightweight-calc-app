@@ -8,9 +8,9 @@ import {
   push,
   setValue,
   isRootFactor,
-} from '../nodes/nodes.ts';
-import { IRenderOptions, renderNode } from '../render/render.ts';
-import { evaluate, IEvaluateOptions } from '../evaluate/evaluate.ts';
+} from '../nodes/nodes';
+import { IRenderOptions, renderNode } from '../render/render';
+import { evaluate, IEvaluateOptions } from '../evaluate/evaluate';
 
 export class Expression {
   readonly #root = createRootFactor();

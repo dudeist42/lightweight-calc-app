@@ -1,4 +1,4 @@
-import { IFactor, INode, INumberFactor } from '../nodes/nodes.ts';
+import { IFactor, INode, INumberFactor } from '../nodes/nodes';
 export declare const evalNumber: (node: INumberFactor) => number;
 export type TDefineEvalFunction = <N extends IFactor>(left: number | undefined, right: number, context: {
     node: N;

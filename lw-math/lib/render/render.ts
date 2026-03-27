@@ -3,6 +3,7 @@ import {
   IBracketsFactor,
   IFunctionFactor,
   INode,
+  INumberFactor,
   isBracketFactor,
   isConstantFactor,
   isFunctionFactor,
@@ -11,7 +12,8 @@ import {
   isRootFactor,
   isTerm,
   ITerm,
-} from '../nodes/nodes.ts';
+  TermName,
+} from '../nodes/nodes';
 
 const renderTerm = (node: ITerm, options: Partial<IRenderOptions>) => {
   const left = node.left ? renderNode(node.left, options) : '';
@@ -45,6 +47,12 @@ const renderFunction = (node: IFunctionFactor, options: Partial<IRenderOptions>)
     name: node.value,
     isClosed: Boolean(node.isClosed),
   });
+};
+
+const renderNumber = (node: INumberFactor, options: Partial<IRenderOptions>) => {
+  return options?.operators?.[TermName.Sub]
+    ? node.value.replace(TermName.Sub, options?.operators?.[TermName.Sub])
+    : node.value;
 };
 
 export interface IRenderOptions {
@@ -85,7 +93,7 @@ export const renderNode = (node: INode, options: Partial<IRenderOptions> = {}): 
   }
 
   if (isNumberFactor(node)) {
-    return node.value;
+    return renderNumber(node, options);
   }
 
   if (isConstantFactor(node)) {
