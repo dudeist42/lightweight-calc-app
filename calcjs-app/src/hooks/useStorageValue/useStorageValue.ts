@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { useCallback, useMemo, useRef, useSyncExternalStore } from 'react';
 import { createStorage } from '../../services/SafeStorage';
 
 export const useStorageValue = <
@@ -17,6 +17,7 @@ export const useStorageValue = <
 ): [Value, (value: Value | ((currentValue: Value) => Value)) => void] => {
   const storage = createStorage(type);
   const snapshot = useSyncExternalStore(storage.subscribe, storage.getSnapshot);
+  const initialValueRef = useRef(initialValue);
 
   const snapshotValue = snapshot[key];
   const value = useMemo(() => {
@@ -28,7 +29,8 @@ export const useStorageValue = <
       const raw = storage.get(key);
       const current = raw ? JSON.parse(raw) : null;
 
-      const result = typeof nextValue === 'function' ? nextValue(current) : nextValue;
+      const result =
+        typeof nextValue === 'function' ? nextValue(current ?? initialValueRef.current) : nextValue;
 
       storage.set(key, JSON.stringify(result));
     },

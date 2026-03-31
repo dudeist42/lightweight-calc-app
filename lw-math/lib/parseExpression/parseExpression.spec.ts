@@ -14,6 +14,7 @@ describe('parseExpression()', () => {
       ['(', 'arctan(', '1', '+', '2', ')', '+', 'sin(', '3', '*', '4', ')', ')'],
     ],
     ['(-0.5!!)!!', ['(', '-', '0', '.', '5', '!', '!', ')', '!', '!']],
+    ['10 + 50%', ['1', '0', '+', '5', '0', '%']],
   ])('should be equal with createExpression "%s"', (strExpression, sequenceExpression) => {
     const parsedExpression = parseExpression(strExpression);
     const expression = createExpression();

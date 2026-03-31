@@ -61,7 +61,12 @@ type TCalculatorDisplayActionType =
 const displayReducer = (state: IDisplayState, action: TCalculatorDisplayActionType) => {
   switch (action.type) {
     case 'set': {
-      return { ...defaultDisplayState, value: action.payload.value, isDirty: true };
+      return {
+        ...defaultDisplayState,
+        value: action.payload.value,
+        answer: state.answer,
+        isDirty: true,
+      };
     }
     case 'evaluate': {
       return {

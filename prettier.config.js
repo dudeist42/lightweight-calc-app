@@ -6,12 +6,4 @@ export default {
   singleQuote: true,
   bracketSpacing: true,
   arrowParens: 'always',
-  overrides: [
-    {
-      files: '*.{ts,tsx}',
-      options: {
-        parser: 'typescript',
-      },
-    },
-  ],
 };

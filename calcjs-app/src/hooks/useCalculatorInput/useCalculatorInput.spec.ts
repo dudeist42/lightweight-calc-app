@@ -25,6 +25,11 @@ describe('useCalculatorInput()', () => {
     rerender();
   };
 
+  const setExpression: typeof result.current.setExpression = (value: string) => {
+    result.current.setExpression(value);
+    rerender();
+  };
+
   afterEach(() => {
     ({ rerender, result } = renderHook(() => useCalculatorInput()));
   });
@@ -151,6 +156,27 @@ describe('useCalculatorInput()', () => {
       isDirty: false,
       isError: false,
       isEvaluated: false,
+    });
+  });
+
+  it('should keep answer and set dirty flag, when expression was set', () => {
+    setExpression('10 + 50%');
+    evaluate();
+    setExpression('Ans + 50%');
+    expect(result.current.state).toEqual({
+      answer: 15,
+      value: 'Ans + 50%',
+      isDirty: true,
+      isError: false,
+      isEvaluated: false,
+    });
+    evaluate();
+    expect(result.current.state).toEqual({
+      answer: 22.5,
+      value: 'Ans + 50%',
+      isDirty: false,
+      isError: false,
+      isEvaluated: true,
     });
   });
 

@@ -345,7 +345,7 @@ var e = /* @__PURE__ */ function(e) {
 	evaluate(e) {
 		return Y(this.#e, e);
 	}
-}, Me = (e) => new X(e), Ne = /^\d+(?:\.\d+)?(?:E-?\d+(?:.\d+)?)?/i, Pe = /^\w+/, Fe = /^\w+\(/, Ie = /^[-/*+]/, Z = /^!/, Le = /^\s*/, Re = /^\(|^\)/, ze = /^,/, Q = /* @__PURE__ */ function(e) {
+}, Me = (e) => new X(e), Ne = /^\d+(?:\.\d+)?(?:E-?\d+(?:.\d+)?)?/i, Pe = /^\w+/, Fe = /^\w+\(/, Ie = /^[-/*+]/, Z = /^[!%]/, Le = /^\s*/, Re = /^\(|^\)/, ze = /^,/, Q = /* @__PURE__ */ function(e) {
 	return e[e.Number = 0] = "Number", e[e.Constant = 1] = "Constant", e[e.Function = 2] = "Function", e[e.Operator = 3] = "Operator", e[e.PostfixOperator = 4] = "PostfixOperator", e[e.Bracket = 5] = "Bracket", e[e.Comma = 6] = "Comma", e;
 }({}), $ = [
 	[Q.Number, Ne],

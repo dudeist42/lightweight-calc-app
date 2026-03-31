@@ -14,7 +14,9 @@
     "test:calcjs-app": "pnpm --filter calcjs-app test",
     "test": "pnpm test:lw-math && pnpm test:calcjs-app",
     "build": "pnpm build:lw-math && pnpm build:calcjs-app",
-    "dev": "pnpm build:lw-math && pnpm --filter calcjs-app dev",
+    "dev:lw-math": "pnpm build:lw-math",
+    "dev:calcjs-app": "pnpm --filter calcjs-app dev",
+    "dev": "pnpm run /^dev:.*/",
     "preview": "pnpm build && pnpm --filter calcjs-app preview",
     "lint": "eslint .",
     "lint:fix": "pnpm lint --fix",
@@ -35,7 +37,8 @@
   "pnpm": {
     "overrides": {
       "brace-expansion@<1.1.13": ">=1.1.13",
-      "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3"
+      "brace-expansion@>=2.0.0 <2.0.3": ">=2.0.3",
+      "happy-dom@<20.8.9": ">=20.8.9"
     }
   }
 }
